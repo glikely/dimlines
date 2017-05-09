@@ -141,37 +141,19 @@ module line(length, width=DIM_LINE_WIDTH,
 
     arr_points = width * 4;
     arr_length = arr_points * .6;
+    line_length = length - arr_length * ((left_arrow ? 1 : 0) + (right_arrow ? 1 : 0));
 
     union() {
-        if (left_arrow && right_arrow) {
-            translate([arr_length, -width / 2, 0])
-            cube([length - arr_length * 2, width, height], center=false);
-        } else {
+        translate([left_arrow ? arr_length : 0, -width / 2, 0])
+            cube([line_length, width, height], center=false);
 
-            if (left_arrow) {
-                translate([arr_length, -width / 2, 0])
-                cube([length - arr_length, width, height], center=false);
-            } else {
-                if (right_arrow) {
-                    translate([0, -width / 2, 0])
-                    cube([length - arr_length, width, height], center=false);
-                } else {
-                    translate([0, -width / 2, 0])
-                    cube([length, width, height], center=false);
-                }
-
-            }
-        }
-
-        if (left_arrow) {
+        if (left_arrow)
             arrow(arr_points, arr_length, height);
-        }
 
         if (right_arrow) {
             translate([length, 0, 0])
             rotate([0, 0, 180])
             arrow(arr_points, arr_length, height);
-
         }
     }
 }
