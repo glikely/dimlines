@@ -159,35 +159,25 @@ module line(length, width=DIM_LINE_WIDTH,
 }
 
 
-module circle_center(radius, size=DIM_HOLE_CENTER, line_width=DIM_LINE_WIDTH) {
-
+module circle_center(radius, size=DIM_HOLE_CENTER, line_width=DIM_LINE_WIDTH)
+{
     translate([-size / 2, 0, 0])
-    line(length=size, width=line_width, height=DIM_HEIGHT, left_arrow=false,
-        right_arrow=false);
+        line(length=size, width=line_width);
 
     translate([radius - size / 2, 0, 0])
-    line(length=size, width=line_width, height=DIM_HEIGHT, left_arrow=false,
-        right_arrow=false);
+        line(length=size, width=line_width);
 
     translate([-radius - size / 2, 0, 0])
-    line(length=size, width=line_width, height=DIM_HEIGHT, left_arrow=false,
-        right_arrow=false);
+        line(length=size, width=line_width);
 
-    translate([0, -size / 2, 0])
-    rotate([0, 0, 90])
-    line(length=size, width=line_width, height=DIM_HEIGHT, left_arrow=false,
-         right_arrow=false);
+    translate([0, -size / 2, 0]) rotate([0, 0, 90])
+        line(length=size, width=line_width);
 
-    translate([0, radius - size / 2, 0])
-    rotate([0, 0, 90])
-    line(length=size, width=line_width, height=DIM_HEIGHT, left_arrow=false,
-        right_arrow=false);
+    translate([0, radius - size / 2, 0]) rotate([0, 0, 90])
+        line(length=size, width=line_width);
 
-    translate([0, -radius - size / 2, 0])
-    rotate([0, 0, 90])
-    line(length=size, width=line_width, height=DIM_HEIGHT, left_arrow=false,
-        right_arrow=false);
-
+    translate([0, -radius - size / 2, 0]) rotate([0, 0, 90])
+        line(length=size, width=line_width);
 }
 
 function text_or_length(length, mytext) = (len(mytext) == 0)
@@ -215,25 +205,23 @@ module dimensions(length, line_width=DIM_LINE_WIDTH, loc=DIM_CENTER,
     space = len(text_or_length(length, mytext)) * DIM_FONTSIZE;
 
     if (loc == DIM_CENTER) {
-        line(length=length / 2 - space / 2, width=line_width, height=DIM_HEIGHT,
-             left_arrow=true, right_arrow=false);
+        line(length=length / 2 - space / 2, width=line_width, left_arrow=true);
         translate([(length) / 2, 0]) scale_text()
             text(text_or_length(length, mytext), halign="center", valign="center");
 
         translate([length / 2 + space / 2, 0, 0])
-        line(length=length / 2 - space / 2, width=line_width, height=DIM_HEIGHT,
-             left_arrow=false, right_arrow=true);
+        line(length=length / 2 - space / 2, width=line_width, right_arrow=true);
     } else {
 
         if (loc == DIM_LEFT) {
-            line(length=length, width=line_width, height=DIM_HEIGHT,
+            line(length=length, width=line_width,
                  left_arrow=true, right_arrow=true);
 
             translate([-DIM_FONTSIZE, 0]) scale_text()
                 text(text_or_length(length, mytext), halign="right", valign="center");
         } else {
             if (loc == DIM_RIGHT) {
-                line(length=length, width=line_width, height=DIM_HEIGHT,
+                line(length=length, width=line_width,
                      left_arrow=true, right_arrow=true);
 
                 translate([length+DIM_FONTSIZE, 0]) scale_text()
@@ -242,14 +230,14 @@ module dimensions(length, line_width=DIM_LINE_WIDTH, loc=DIM_CENTER,
                 if (loc == DIM_OUTSIDE) {
 
                     rotate([0, 180, 0])
-                    line(length=length / 2, width=line_width, height=DIM_HEIGHT,
+                    line(length=length / 2, width=line_width,
                          left_arrow=true, right_arrow=false);
 
                     translate([(length) / 2, 0]) scale_text()
                         text(text_or_length(length, mytext), halign="center", valign="center");
 
                     translate([length, 0, 0])
-                    line(length=length / 2, width=line_width, height=DIM_HEIGHT,
+                    line(length=length / 2, width=line_width,
                          left_arrow=true, right_arrow=false);
                 }
             }
@@ -273,16 +261,14 @@ module leader_line(angle, radius, angle_length, horz_line_length,
 
     rotate([0, 0, angle])
     translate([radius, 0, 0])
-    line(length=angle_length, width=line_width, height=DIM_HEIGHT,
-        left_arrow=true, right_arrow=false);
+    line(length=angle_length, width=line_width, left_arrow=true);
 
     rotate([0, 0, angle])
     translate([radius + angle_length, 0, 0])
     rotate([0, 0, -angle])
     union() {
         if (direction == DIM_RIGHT) {
-            line(length=horz_line_length, width=line_width, height=DIM_HEIGHT,
-                 left_arrow=false, right_arrow=false);
+            line(length=horz_line_length, width=line_width);
 
             // Using centered text so that the 'do_circle' feature looks correct
             translate([horz_line_length + space + text_length/2, 0]) scale_text()
@@ -301,8 +287,7 @@ module leader_line(angle, radius, angle_length, horz_line_length,
 
         } else {
             translate([-horz_line_length, 0, 0])
-            line(length=horz_line_length, width=line_width, height=DIM_HEIGHT,
-                 left_arrow=false, right_arrow=false);
+            line(length=horz_line_length, width=line_width);
 
             translate([-(horz_line_length + space), 0]) scale_text()
                 text(text, halign="right", valign="center");
@@ -341,13 +326,9 @@ module titleblock(lines, descs, details) {
                     0])
         if (line[2] == DIM_VERT) {
             rotate([0, 0, -90])
-            line(length=line[3] * DIM_LINE_WIDTH,
-                 width=DIM_LINE_WIDTH * line[4], height=DIM_HEIGHT,
-                left_arrow=false, right_arrow=false);
+            line(length=line[3] * DIM_LINE_WIDTH, width=DIM_LINE_WIDTH * line[4]);
         } else {
-            line(length=(line[3] + 1) * DIM_LINE_WIDTH,
-                 width=DIM_LINE_WIDTH * line[4], height=DIM_HEIGHT,
-                left_arrow=false, right_arrow=false);
+            line(length=(line[3] + 1) * DIM_LINE_WIDTH, width=DIM_LINE_WIDTH * line[4]);
         }
 
     }
@@ -663,25 +644,20 @@ module sample_titleblock2() {
 
 }
 
-module sample_lines(){
+module sample_lines()
+{
     // sample lines
-    union() {
-        line(length=2 * DIM_SAMPLE_SCALE, width=DIM_LINE_WIDTH, height=DIM_HEIGHT,
-            left_arrow=false, right_arrow=false);
-        translate([0, -0.25 * DIM_SAMPLE_SCALE, 0])
-        line(length=2 * DIM_SAMPLE_SCALE, width=DIM_LINE_WIDTH, height=DIM_HEIGHT, left_arrow=true,
-            right_arrow=false);
-        translate([0, -0.5 * DIM_SAMPLE_SCALE, 0])
-        line(length=2 * DIM_SAMPLE_SCALE, width=DIM_LINE_WIDTH, height=DIM_HEIGHT,
-            left_arrow=false, right_arrow=true);
-        translate([0, -0.75 * DIM_SAMPLE_SCALE, 0])
-        line(length=2 * DIM_SAMPLE_SCALE, width=DIM_LINE_WIDTH, height=DIM_HEIGHT, left_arrow=true,
-            right_arrow=true);
-    }
+    line(length=2 * DIM_SAMPLE_SCALE, left_arrow=false, right_arrow=false);
+    translate([0, -0.25 * DIM_SAMPLE_SCALE, 0])
+        line(length=2 * DIM_SAMPLE_SCALE, left_arrow=true, right_arrow=false);
+    translate([0, -0.5 * DIM_SAMPLE_SCALE, 0])
+        line(length=2 * DIM_SAMPLE_SCALE, left_arrow=false, right_arrow=true);
+    translate([0, -0.75 * DIM_SAMPLE_SCALE, 0])
+        line(length=2 * DIM_SAMPLE_SCALE, left_arrow=true, right_arrow=true);
 }
 
-module sample_dimensions() {
-
+module sample_dimensions()
+{
     /* shows all possibilities
         DIM_CENTER = 0;
         DIM_LEFT = 1;
@@ -693,21 +669,17 @@ module sample_dimensions() {
 
     // The following two lines are vertical lines that bracket the dimensions
     // left arrow
-    translate([0, -1.75 * DIM_SAMPLE_SCALE, 0])
-    rotate([0, 0, 90])
-    line(length=length, width=DIM_LINE_WIDTH, height=DIM_HEIGHT,
-         left_arrow=false, right_arrow=false);
+    translate([0, -1.75 * DIM_SAMPLE_SCALE, 0]) rotate([0, 0, 90])
+        line(length);
 
     // right arrow
-    translate([length, -1.75 * DIM_SAMPLE_SCALE, 0])
-    rotate([0, 0, 90])
-    line(length=length, width=DIM_LINE_WIDTH, height=DIM_HEIGHT,
-         left_arrow=false, right_arrow=false);
+    translate([length, -1.75 * DIM_SAMPLE_SCALE, 0]) rotate([0, 0, 90])
+        line(length);
 
     //  The following runs through all the dimension types
     for (i = [0:4]) {
         translate([0, -.5 * i * DIM_SAMPLE_SCALE, 0])
-        dimensions(length=length, line_width=DIM_LINE_WIDTH, loc=i);
+        dimensions(length=length, loc=i);
     }
 }
 
@@ -728,22 +700,17 @@ module sample_dimensions_with_text(mytext) {
 
     // The following two lines are vertical lines that bracket the dimensions
     // left arrow
-    translate([0, -1.75 * DIM_SAMPLE_SCALE, 0])
-    rotate([0, 0, 90])
-    line(length=length, width=DIM_LINE_WIDTH, height=DIM_HEIGHT,
-         left_arrow=false, right_arrow=false);
+    translate([0, -1.75 * DIM_SAMPLE_SCALE, 0]) rotate([0, 0, 90])
+        line(length);
 
     // right arrow
-    translate([length, -1.75 * DIM_SAMPLE_SCALE, 0])
-    rotate([0, 0, 90])
-    line(length=length, width=DIM_LINE_WIDTH, height=DIM_HEIGHT,
-         left_arrow=false, right_arrow=false);
+    translate([length, -1.75 * DIM_SAMPLE_SCALE, 0]) rotate([0, 0, 90])
+        line(length=length);
 
     //  The following runs through all the dimension types
     for (i = [0:4]) {
         translate([0, -.5 * i * DIM_SAMPLE_SCALE, 0])
-        dimensions(length=length, line_width=DIM_LINE_WIDTH, loc=i,
-                   mytext=mytext);
+        dimensions(length=length, loc=i, mytext=mytext);
     }
 }
 
@@ -755,7 +722,6 @@ module sample_leaderlines() {
         leader_line(angle=i * 15, radius=.25 * DIM_SAMPLE_SCALE,
                     angle_length=(i * .25 * DIM_SAMPLE_SCALE),
                     horz_line_length=.5 * DIM_SAMPLE_SCALE, direction=DIM_RIGHT,
-                    line_width=DIM_LINE_WIDTH,
                     text=str("leader line angle: ", i * 15 + 90),
                     do_circle=false
                    );
@@ -765,14 +731,12 @@ module sample_leaderlines() {
         leader_line(angle=i * 20 + 90, radius=.25 * DIM_SAMPLE_SCALE,
                     angle_length=.75 * DIM_SAMPLE_SCALE,
                     horz_line_length=.5 * DIM_SAMPLE_SCALE, direction=DIM_LEFT,
-                    line_width=DIM_LINE_WIDTH,
                     text=str("leader line angle: ", i * 20 + 90));
     }
     for (i = [1:4]) {
         leader_line(angle=-i * 20, radius=.25 * DIM_SAMPLE_SCALE,
                     angle_length=1.5 * DIM_SAMPLE_SCALE,
                     horz_line_length=.25 * DIM_SAMPLE_SCALE, direction=DIM_RIGHT,
-                    line_width=DIM_LINE_WIDTH,
                     text=str(i),
                     do_circle=true
                    );
@@ -786,11 +750,8 @@ module sample_circlecenter() {
         cube([DIM_SAMPLE_SCALE, DIM_SAMPLE_SCALE, DIM_SAMPLE_SCALE], center=true);
         cylinder(h=1.1 * DIM_SAMPLE_SCALE, r=radius, center=true, $fn=100);
     }
-    color("Black")
-    translate([0, 0, .51 * DIM_SAMPLE_SCALE])
-    circle_center(radius=radius, size=DIM_HOLE_CENTER,
-        line_width=DIM_LINE_WIDTH);
-
+    color("Black") translate([0, 0, .51 * DIM_SAMPLE_SCALE])
+        circle_center(radius);
 }
 
 // uncomment these to sample
