@@ -32,7 +32,7 @@
  *
  * the following functions or modules are available.
  *
- *  line(length, width, height=DIM_HEIGHT, left_arrow=false, right_arrow=false)
+ *  line(length, width, left_arrow=false, right_arrow=false)
  *      Can draw a line with the options of including an arrow at either end
  *
  *  circle_center(radius, size, line_width)
@@ -98,26 +98,40 @@ DIM_LOWER_RIGHT = 3;
  * accordingly.
  *
  * For example, the following parameters were used for a part 3.5 units long.
- * DIM_FONTSIZE is set to about 5% of the object length, or 0.175 units. In
- * addition, DIM_HEIGHT is a height meant to be slightly above your tallest
- * part.
+ * DIM_FONTSIZE is set to about 5% of the object length, or 0.175 units.
  */
 
 DIM_FONTSIZE = 0.175;
 
 // an approximation that sets the line widths relative to the font size
 DIM_LINE_WIDTH = DIM_FONTSIZE / 7; // width of dimension lines
-DIM_HEIGHT = .01; // height of lines
 
 // refers to the size of the cross within a circle
 DIM_HOLE_CENTER = DIM_LINE_WIDTH * 6;
 
+function dim_extrude_flag() = $dim_extrude ? $dim_extrude : true;
 
-module arrow(arr_points, arr_length, height) {
+/**
+ * dim_extrude() - Helper to optionally extrude 2D dimension objects to 3D.
+ *
+ * Intended for internal use of this library. dim_extrude() should be prefixed
+ * onto every call to a 2D module like square(), circle(), and polygon(). If
+ * $dim_extrude is true, then it will extrude the shapes. Otherwise it will
+ * leave them as 2D.
+ */
+module dim_extrude()
+{
+    if (dim_extrude_flag())
+        linear_extrude(dim_linewidth()*0.01, convexity=10)
+            children();
+    else
+        children();
+}
+
+module arrow(arr_points, arr_length)
+{
     // arrow points to the left
-    linear_extrude(height=height, convexity=2)
-
-    polygon(
+    dim_extrude() polygon(
         points = [[0, 0],
                 [arr_points, arr_points / 2],
                 [arr_length, 0],
@@ -126,10 +140,8 @@ module arrow(arr_points, arr_length, height) {
 }
 
 module line(length, width=DIM_LINE_WIDTH,
-            height=DIM_HEIGHT,
-            left_arrow=false,
-            right_arrow=false
-            ) {
+            left_arrow=false, right_arrow=false)
+{
     /* This module draws a line that can have an arrow on either end.  Because
      * the intended use is to be viewed strictly from above, the height of the
      * line is set arbitrarily thin.
@@ -144,16 +156,16 @@ module line(length, width=DIM_LINE_WIDTH,
     line_length = length - arr_length * ((left_arrow ? 1 : 0) + (right_arrow ? 1 : 0));
 
     union() {
-        translate([left_arrow ? arr_length : 0, -width / 2, 0])
-            cube([line_length, width, height], center=false);
+        translate([left_arrow ? arr_length : 0, -width / 2])
+            dim_extrude() square([line_length, width], center=false);
 
         if (left_arrow)
-            arrow(arr_points, arr_length, height);
+            arrow(arr_points, arr_length);
 
         if (right_arrow) {
-            translate([length, 0, 0])
+            translate([length, 0])
             rotate([0, 0, 180])
-            arrow(arr_points, arr_length, height);
+            arrow(arr_points, arr_length);
         }
     }
 }
@@ -161,22 +173,22 @@ module line(length, width=DIM_LINE_WIDTH,
 
 module circle_center(radius, size=DIM_HOLE_CENTER, line_width=DIM_LINE_WIDTH)
 {
-    translate([-size / 2, 0, 0])
+    translate([-size/2, 0])
         line(length=size, width=line_width);
 
-    translate([radius - size / 2, 0, 0])
+    translate([radius-size/2, 0])
         line(length=size, width=line_width);
 
-    translate([-radius - size / 2, 0, 0])
+    translate([-radius-size/2, 0])
         line(length=size, width=line_width);
 
-    translate([0, -size / 2, 0]) rotate([0, 0, 90])
+    translate([0, -size/2]) rotate([0, 0, 90])
         line(length=size, width=line_width);
 
-    translate([0, radius - size / 2, 0]) rotate([0, 0, 90])
+    translate([0, radius-size/2]) rotate([0, 0, 90])
         line(length=size, width=line_width);
 
-    translate([0, -radius - size / 2, 0]) rotate([0, 0, 90])
+    translate([0, -radius-size/2]) rotate([0, 0, 90])
         line(length=size, width=line_width);
 }
 
@@ -194,9 +206,7 @@ function text_or_length(length, mytext) = (len(mytext) == 0)
  */
 module scale_text()
 {
-    linear_extrude(DIM_HEIGHT, convexity=10)
-        scale([DIM_FONTSIZE/10, DIM_FONTSIZE/10])
-            children();
+    dim_extrude() scale([DIM_FONTSIZE/10, DIM_FONTSIZE/10]) children();
 }
 
 module dimensions(length, line_width=DIM_LINE_WIDTH, loc=DIM_CENTER,
@@ -206,10 +216,10 @@ module dimensions(length, line_width=DIM_LINE_WIDTH, loc=DIM_CENTER,
 
     if (loc == DIM_CENTER) {
         line(length=length / 2 - space / 2, width=line_width, left_arrow=true);
-        translate([(length) / 2, 0]) scale_text()
+        translate([length/2, 0]) scale_text()
             text(text_or_length(length, mytext), halign="center", valign="center");
 
-        translate([length / 2 + space / 2, 0, 0])
+        translate([length/2+space/2, 0])
         line(length=length / 2 - space / 2, width=line_width, right_arrow=true);
     } else {
 
@@ -236,7 +246,7 @@ module dimensions(length, line_width=DIM_LINE_WIDTH, loc=DIM_CENTER,
                     translate([(length) / 2, 0]) scale_text()
                         text(text_or_length(length, mytext), halign="center", valign="center");
 
-                    translate([length, 0, 0])
+                    translate([length, 0])
                     line(length=length / 2, width=line_width,
                          left_arrow=true, right_arrow=false);
                 }
@@ -259,12 +269,11 @@ module leader_line(angle, radius, angle_length, horz_line_length,
     text_length = len(text) * DIM_FONTSIZE * 0.6;
     space = DIM_FONTSIZE * 0.6;
 
-    rotate([0, 0, angle])
-    translate([radius, 0, 0])
-    line(length=angle_length, width=line_width, left_arrow=true);
+    rotate([0, 0, angle]) translate([radius, 0])
+        line(length=angle_length, width=line_width, left_arrow=true);
 
     rotate([0, 0, angle])
-    translate([radius + angle_length, 0, 0])
+    translate([radius + angle_length, 0])
     rotate([0, 0, -angle])
     union() {
         if (direction == DIM_RIGHT) {
@@ -275,23 +284,21 @@ module leader_line(angle, radius, angle_length, horz_line_length,
                 text(text, valign="center", halign="center");
 
             if (do_circle) {
-                translate([(horz_line_length + space + text_length/2),
-                          0,  0])
-                difference() {
-                    cylinder(h=DIM_HEIGHT, r=text_length + space - line_width,
+                translate([(horz_line_length + space + text_length/2), 0])
+                dim_extrude() difference() {
+                    circle(r=text_length + space - line_width,
                             center=true, $fn=100);
-                    cylinder(h=.05, r=text_length + space - line_width * 2,
+                    circle(r=text_length + space - line_width * 2,
                             center=true, $fn=100);
                 }
             }
 
         } else {
-            translate([-horz_line_length, 0, 0])
+            translate([-horz_line_length, 0])
             line(length=horz_line_length, width=line_width);
 
             translate([-(horz_line_length + space), 0]) scale_text()
                 text(text, halign="right", valign="center");
-
         }
     }
 }
@@ -321,9 +328,7 @@ module titleblock(lines, descs, details) {
     */
 
     for (line = lines) {
-        translate([line[0] * DIM_LINE_WIDTH,
-                    line[1] * DIM_LINE_WIDTH,
-                    0])
+        translate([line[0]*DIM_LINE_WIDTH, line[1]*DIM_LINE_WIDTH])
         if (line[2] == DIM_VERT) {
             rotate([0, 0, -90])
             line(length=line[3] * DIM_LINE_WIDTH, width=DIM_LINE_WIDTH * line[4]);
@@ -334,7 +339,7 @@ module titleblock(lines, descs, details) {
     }
 
     for (line = descs) {
-        translate([line[0] * DIM_LINE_WIDTH, line[1] * DIM_LINE_WIDTH, 0])
+        translate([line[0] * DIM_LINE_WIDTH, line[1] * DIM_LINE_WIDTH])
         if (line[2] == DIM_VERT) {
             rotate([0, 0, 90]) scale_text()
                 text(line[3], size=10*line[4]);
@@ -344,7 +349,7 @@ module titleblock(lines, descs, details) {
     }
 
     for (line = details) {
-        translate([line[0] * DIM_LINE_WIDTH, line[1] * DIM_LINE_WIDTH, 0])
+        translate([line[0] * DIM_LINE_WIDTH, line[1] * DIM_LINE_WIDTH])
         if (line[2] == DIM_VERT) {
             rotate([0, 0, 90])
             scale_text() text(line[3], size=10*line[4]);
@@ -496,7 +501,7 @@ module sample_revisionblock(revisions) {
     num_revisions = len(revisions);
 
     translate([-(revision_width + 40) * DIM_LINE_WIDTH,
-              row_height * 2 * DIM_LINE_WIDTH, 0])
+              row_height * 2 * DIM_LINE_WIDTH])
     union() {
         titleblock(lines, descs, details);
 
@@ -504,18 +509,18 @@ module sample_revisionblock(revisions) {
         //  do this piecemeal -- draw the vertical first
 
         for (col = [0: len(cols)]) {
-            translate([cols[col] * DIM_LINE_WIDTH, 0, 0])
+            translate([cols[col] * DIM_LINE_WIDTH, 0])
             rotate([0, 0, 90])
             line(num_revisions * row_height * DIM_LINE_WIDTH);
         }
 
         for (row = [0: len(revisions)]) {
-            translate([0, row * row_height * DIM_LINE_WIDTH, 0])
+            translate([0, row * row_height * DIM_LINE_WIDTH])
             line(revision_width * DIM_LINE_WIDTH);
 
             for (col = [0:2]) {
                 translate([(cols[col] + desc_x) * DIM_LINE_WIDTH,
-                    ((row + 1) * row_height + desc_y) * DIM_LINE_WIDTH, 0])
+                    ((row + 1) * row_height + desc_y) * DIM_LINE_WIDTH])
                 scale_text() text(revisions[row][col]);
             }
         }
@@ -648,11 +653,11 @@ module sample_lines()
 {
     // sample lines
     line(length=2 * DIM_SAMPLE_SCALE, left_arrow=false, right_arrow=false);
-    translate([0, -0.25 * DIM_SAMPLE_SCALE, 0])
+    translate([0, -0.25 * DIM_SAMPLE_SCALE])
         line(length=2 * DIM_SAMPLE_SCALE, left_arrow=true, right_arrow=false);
-    translate([0, -0.5 * DIM_SAMPLE_SCALE, 0])
+    translate([0, -0.5 * DIM_SAMPLE_SCALE])
         line(length=2 * DIM_SAMPLE_SCALE, left_arrow=false, right_arrow=true);
-    translate([0, -0.75 * DIM_SAMPLE_SCALE, 0])
+    translate([0, -0.75 * DIM_SAMPLE_SCALE])
         line(length=2 * DIM_SAMPLE_SCALE, left_arrow=true, right_arrow=true);
 }
 
@@ -669,17 +674,17 @@ module sample_dimensions()
 
     // The following two lines are vertical lines that bracket the dimensions
     // left arrow
-    translate([0, -1.75 * DIM_SAMPLE_SCALE, 0]) rotate([0, 0, 90])
+    translate([0, -1.75 * DIM_SAMPLE_SCALE]) rotate([0, 0, 90])
         line(length);
 
     // right arrow
-    translate([length, -1.75 * DIM_SAMPLE_SCALE, 0]) rotate([0, 0, 90])
+    translate([length, -1.75 * DIM_SAMPLE_SCALE]) rotate([0, 0, 90])
         line(length);
 
     //  The following runs through all the dimension types
     for (i = [0:4]) {
-        translate([0, -.5 * i * DIM_SAMPLE_SCALE, 0])
-        dimensions(length=length, loc=i);
+        translate([0, -.5 * i * DIM_SAMPLE_SCALE])
+            dimensions(length=length, loc=i);
     }
 }
 
@@ -700,17 +705,17 @@ module sample_dimensions_with_text(mytext) {
 
     // The following two lines are vertical lines that bracket the dimensions
     // left arrow
-    translate([0, -1.75 * DIM_SAMPLE_SCALE, 0]) rotate([0, 0, 90])
+    translate([0, -1.75 * DIM_SAMPLE_SCALE]) rotate([0, 0, 90])
         line(length);
 
     // right arrow
-    translate([length, -1.75 * DIM_SAMPLE_SCALE, 0]) rotate([0, 0, 90])
+    translate([length, -1.75 * DIM_SAMPLE_SCALE]) rotate([0, 0, 90])
         line(length=length);
 
     //  The following runs through all the dimension types
     for (i = [0:4]) {
-        translate([0, -.5 * i * DIM_SAMPLE_SCALE, 0])
-        dimensions(length=length, loc=i, mytext=mytext);
+        translate([0, -.5 * i * DIM_SAMPLE_SCALE])
+            dimensions(length=length, loc=i, mytext=mytext);
     }
 }
 
@@ -755,25 +760,20 @@ module sample_circlecenter() {
 }
 
 // uncomment these to sample
-sample_lines();
-//
-translate([-5.5 * DIM_SAMPLE_SCALE, 0, 0])
-sample_dimensions();
+union() {
+    // Explicitly set the dimensioning parameters
+    $dim_height=0.01;
 
-translate([-11 * DIM_SAMPLE_SCALE, 0, 0])
-sample_dimensions_with_text(mytext="my variable");
+    sample_lines();
 
-//
-translate([4 * DIM_SAMPLE_SCALE, 0, 0])
-sample_circlecenter();
-//
-translate([-2 * DIM_SAMPLE_SCALE, 3 * DIM_SAMPLE_SCALE, 0])
-sample_leaderlines();
+    translate([-5.5 * DIM_SAMPLE_SCALE, 0])
+    sample_dimensions();
 
-translate([3 * DIM_SAMPLE_SCALE, 4 * DIM_SAMPLE_SCALE, 0])
-sample_titleblock1();
+    translate([-11 * DIM_SAMPLE_SCALE, 0])
+    sample_dimensions_with_text(mytext="my variable");
 
-translate([0 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE, 0])
-sample_titleblock2();
-
-
+    translate([4 * DIM_SAMPLE_SCALE, 0]) sample_circlecenter();
+    translate([-2 * DIM_SAMPLE_SCALE, 3 * DIM_SAMPLE_SCALE]) sample_leaderlines();
+    translate([3 * DIM_SAMPLE_SCALE, 4 * DIM_SAMPLE_SCALE]) sample_titleblock1();
+    translate([0 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE]) sample_titleblock2();
+}
