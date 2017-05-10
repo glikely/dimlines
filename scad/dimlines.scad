@@ -188,25 +188,19 @@ module dim_outline(weight=1) {
     }
 }
 
+/**
+ * circle_center() - Draw drill center markings
+ * radius: radius of circle to be marked
+ * size: length of crosshair lines
+ */
 module circle_center(radius, size=dim_linewidth()*6)
 {
-    translate([-size/2, 0])
-        line(size);
-
-    translate([radius-size/2, 0])
-        line(size);
-
-    translate([-radius-size/2, 0])
-        line(size);
-
-    translate([0, -size/2]) rotate([0, 0, 90])
-        line(size);
-
-    translate([0, radius-size/2]) rotate([0, 0, 90])
-        line(size);
-
-    translate([0, -radius-size/2]) rotate([0, 0, 90])
-        line(size);
+    // Outside edge markers
+    for (i=[0,90,180,270])
+        rotate([0,0,i]) translate([radius-size/2, 0]) line(size);
+    // Hole center crosshairs
+    for (i=[0,90])
+        rotate([0,0,i]) translate([-size/2, 0]) line(size);
 }
 
 function text_or_length(length, mytext) = (len(mytext) == 0)
