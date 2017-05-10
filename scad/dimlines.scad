@@ -253,12 +253,13 @@ module leader_line(angle, radius, angle_length, horz_line_length,
 
     text_length = len(text) * dim_fontsize() * 0.6;
     space = dim_fontsize() * 0.6;
+    real_angle_length = angle_length < dim_linewidth()*2 ? dim_linewidth()*2 : angle_length;
 
     rotate([0, 0, angle]) translate([radius, 0])
-        line(angle_length, left_arrow=true);
+        line(real_angle_length, left_arrow=true);
 
     rotate([0, 0, angle])
-    translate([radius + angle_length, 0])
+    translate([radius + real_angle_length, 0])
     rotate([0, 0, -angle])
     union() {
         if (direction == DIM_RIGHT) {
