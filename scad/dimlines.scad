@@ -360,17 +360,17 @@ module sample_titleblock1() {
      * You can see that in the horizontal lines in the first section that are
      * offset by 1, which is the half-width of the outside line.
      */
-    title_width = 290;
+    title_width = 300;
     row_height = 15;
 
-    cols = [-1, 50, 114, 200, 215, 260];
+    cols = [-1, 50, 114, 200, 215, 270];
     rows = [0, -row_height, -row_height * 2, -row_height * 3, -row_height * 4];
 
     // spacing tweaks to fit into the blocks
     desc_x = 2; // column offset for start of small text
     desc_y = -5; // row offset for start of small text
-    det_y = -12;  // row offset for start of detail text
-    desc_size = .75; // relative size of description text
+    det_y = -13;  // row offset for start of detail text
+    desc_size = .65; // relative size of description text
 
     lines = [
         // horizontal lines
@@ -424,7 +424,7 @@ module sample_titleblock1() {
             "D. Smiley ", 1], //Creator
         [cols[3] + desc_x, rows[0] + det_y, DIM_HORZ,
             " ", 1], //Approval person
-        [cols[0] + desc_x + 10, rows[2] + det_y, DIM_HORZ,
+        [cols[0] + desc_x + 5, rows[2] + det_y, DIM_HORZ,
             "My OpenSCAD Project", 1],
         [cols[2] + desc_x, rows[1] + det_y, DIM_HORZ,
             " ", 1], //Document type
@@ -450,12 +450,12 @@ module sample_revisionblock(revisions) {
 
     // revision block headings
     row_height = 15;
-    revision_width = 100;
+    revision_width = 120;
     desc_x = 2;
     desc_y = -10;
     desc_size = 1;
 
-    cols = [0, 20, 60, revision_width];
+    cols = [0, 25, 80, revision_width];
     rows = [0, -row_height, -row_height * 2];
 
     // draw
@@ -486,9 +486,7 @@ module sample_revisionblock(revisions) {
     details = [];
     num_revisions = len(revisions);
 
-    translate([-(revision_width + 40) * dim_linewidth(),
-              row_height * 2 * dim_linewidth()])
-    union() {
+    translate([0, row_height * 2 * dim_linewidth()]) {
         titleblock(lines, descs, details);
 
         //  now for the start of actual revisions
@@ -510,7 +508,6 @@ module sample_revisionblock(revisions) {
                 dim_extrude() text(revisions[row][col], size=dim_fontsize());
             }
         }
-
     }
 }
 
@@ -518,19 +515,20 @@ module sample_titleblock2() {
 
     row_height = 20;
 
-    cols = [-.5, 100, 154, 270];
+    cols = [-.5, 115, 174, 290];
     title_width = cols[3];
 
     rows = [0, -row_height, -row_height * 2, -row_height * 3, -row_height * 4,
             -row_height * 5, -row_height * 6, -row_height * 7
     ];
+    title_height = rows[7];
 
     // spacing tweaks to fit into the blocks
     desc_x = 2; // column offset for start of small text
     desc_y = -5; // row offset for start of small text
     det_x = 15;  // col offset for start of detail text
     det_y = -15;  // row offset for start of detail text
-    desc_size = .75; // relative size of description text
+    desc_size = .65; // relative size of description text
 
 
     lines = [
@@ -556,9 +554,9 @@ module sample_titleblock2() {
 
     part_desc = ["Material", "Finish", "Weight", "Part No."];
     doc_desc = ["Drawing Number",
-                    "Created by",
-                    "Reviewed by",
-                    "Date of issue"
+                "Created by",
+                "Reviewed by",
+                "Date of issue"
     ];
 
     // aspects of the part
@@ -574,7 +572,7 @@ module sample_titleblock2() {
     doc_details = [
         "33-2",             // Drawing No.
         "D. Smiley",        // Created by
-        " ",                // Reviewd by
+        "G. Likely",        // Reviewed by
         "2013-3-31",        // Date
     ];
 
@@ -627,9 +625,10 @@ module sample_titleblock2() {
         ["2a", "2013-4-3", "ds"],
         ["3a", "2013-4-5", "ds"],
         ["4a", "2013-4-15", "ds"],
+        ["5a", "2017-5-10", "gcl"],
     ];
 
-    rotate([0, 0, 90])
+    translate([0, title_height*dim_linewidth()]) rotate([0, 0, 90])
     sample_revisionblock(revisions);
 
 
