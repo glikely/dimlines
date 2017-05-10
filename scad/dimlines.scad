@@ -39,13 +39,13 @@
  *      Draws the cross in the center of a circle.  There are defaults for the
  *      cross size and line width
  *
- *  dimensions(length, line_width, loc=DIM_CENTER, mytext="")
+ *  dimensions(length, line_width, loc="center", label=undef)
  *      draws text within lines, such as <--- 3.5 --->
  *      with the use of the variable loc you can alter the placement of the text
- *      loc=DIM_CENTER      <--- 3.5 --->  this is the default
- *      loc=DIM_LEFT        3.5 <---->
- *      loc=DIM_RIGHT       <----> 3.5
- *      loc=DIM_OUTSIDE     ---> 3.5 <---
+ *      loc="center"      <--- 3.5 --->  this is the default
+ *      loc="left"        3.5 <---->
+ *      loc="right"       <----> 3.5
+ *      loc="outside"     ---> 3.5 <---
  *
  *      Can also pass in text such as a variable name in place of a
  *      numeric dimension.
@@ -74,10 +74,8 @@
 
 
 //  these variables are used within the modules
-DIM_CENTER = 0;
 DIM_LEFT = 1;
 DIM_RIGHT = 2;
-DIM_OUTSIDE = 3;
 DIM_HORZ = 0;
 DIM_VERT = 1;
 DIM_UPPER_LEFT = 0;
@@ -203,51 +201,56 @@ module circle_center(radius, size=dim_linewidth()*6)
         rotate([0,0,i]) translate([-size/2, 0]) line(size);
 }
 
-function text_or_length(length, mytext) = (len(mytext) == 0)
-    ? str(length): mytext;
+function text_or_length(length, mytext) = mytext ? mytext : str(length);
 
-module dimensions(length, loc=DIM_CENTER, mytext="")
+/**
+ * dimensions() - Draw a dimension line showing measurement between two points
+ * length: length of dimension line in model units
+ * loc: Location of label
+ * label: string to use as label. If mytext is omitted, the value of length is
+ *         converted into a string and used as a label
+ *
+ * This module draws a dimensioned line with a label. By default it draws the
+ * line broken with the label in the middle. Placement of the label and
+ * dimension lines can be controlled with the 'loc' argument.
+ */
+module dimensions(length, loc="center", mytext=undef)
 {
-    space = len(text_or_length(length, mytext)) * dim_fontsize();
+    _label = text_or_length(length, mytext);
+    space = len(_label) * dim_fontsize();
 
-    if (loc == DIM_CENTER) {
-        line(length=length / 2 - space / 2, left_arrow=true);
+    if (loc == "center") {
+        line(length/2-space/2, left_arrow=true);
+
         translate([length/2, 0]) dim_extrude()
-            text(text_or_length(length, mytext), size=dim_fontsize(),
-                 halign="center", valign="center");
+            text(_label, size=dim_fontsize(), halign="center", valign="center");
 
         translate([length/2+space/2, 0])
-        line(length=length / 2 - space / 2, right_arrow=true);
+            line(length/2-space/2, right_arrow=true);
+
+    } else if (loc == "left") {
+         line(length, left_arrow=true, right_arrow=true);
+
+         translate([-dim_fontsize(), 0]) dim_extrude()
+             text(_label, size=dim_fontsize(), halign="right", valign="center");
+
+    } else if (loc == "right") {
+        line(length, left_arrow=true, right_arrow=true);
+
+        translate([length+dim_fontsize(), 0]) dim_extrude()
+            text(_label, size=dim_fontsize(), valign="center");
+
+    } else if (loc == "outside") {
+        translate([-length/2, 0])
+            line(length/2, right_arrow=true);
+
+        translate([length/2, 0]) dim_extrude()
+            text(_label, size=dim_fontsize(), halign="center", valign="center");
+
+        translate([length, 0])
+            line(length/2, left_arrow=true);
     } else {
-
-        if (loc == DIM_LEFT) {
-            line(length=length, left_arrow=true, right_arrow=true);
-
-            translate([-dim_fontsize(), 0]) dim_extrude()
-                text(text_or_length(length, mytext), size=dim_fontsize(),
-                     halign="right", valign="center");
-        } else {
-            if (loc == DIM_RIGHT) {
-                line(length=length, left_arrow=true, right_arrow=true);
-
-                translate([length+dim_fontsize(), 0]) dim_extrude()
-                    text(text_or_length(length, mytext), size=dim_fontsize(),
-                         valign="center");
-            } else {
-                if (loc == DIM_OUTSIDE) {
-
-                    rotate([0, 180, 0])
-                    line(length=length / 2, left_arrow=true, right_arrow=false);
-
-                    translate([(length) / 2, 0]) dim_extrude()
-                        text(text_or_length(length, mytext), size=dim_fontsize(),
-                             halign="center", valign="center");
-
-                    translate([length, 0])
-                    line(length=length / 2, left_arrow=true, right_arrow=false);
-                }
-            }
-        }
+        echo("dimensions(): error: unrecognized value for loc:", loc);
     }
 }
 
@@ -652,15 +655,15 @@ module sample_lines()
         line(length=2 * DIM_SAMPLE_SCALE, left_arrow=true, right_arrow=true);
 }
 
-module sample_dimensions()
+/**
+ * sample_dimensions() - Sample dimesioning lines with number label
+ *
+ * This shows sample dimensions with numeric length labels.
+ */
+module sample_dimensions(with_text=false)
 {
-    /* shows all possibilities
-        DIM_CENTER = 0;
-        DIM_LEFT = 1;
-        DIM_RIGHT = 2;
-        DIM_OUTSIDE = 3;
-    */
-
+    /* shows all possibilities */
+    loc = ["center", "left", "right", "outside"];
     length = 2.5 * DIM_SAMPLE_SCALE;
 
     // The following two lines are vertical lines that bracket the dimensions
@@ -673,43 +676,11 @@ module sample_dimensions()
         line(length);
 
     //  The following runs through all the dimension types
-    for (i = [0:4]) {
+    for (i = [0:len(loc)-1]) {
         translate([0, -.5 * i * DIM_SAMPLE_SCALE])
-            dimensions(length=length, loc=i);
+            dimensions(length=length, loc=loc[i], mytext=with_text ? loc[i] : undef);
     }
 }
-
-
-module sample_dimensions_with_text(mytext) {
-
-    /* shows all possibilities
-        DIM_CENTER = 0;
-        DIM_LEFT = 1;
-        DIM_RIGHT = 2;
-        DIM_OUTSIDE = 3;
-
-        This shows sample dimensions with custom text inserted instead of
-        lengths. This enables variable names to be passed in to drawings.
-    */
-
-    length = 2.5 * DIM_SAMPLE_SCALE;
-
-    // The following two lines are vertical lines that bracket the dimensions
-    // left arrow
-    translate([0, -1.75 * DIM_SAMPLE_SCALE]) rotate([0, 0, 90])
-        line(length);
-
-    // right arrow
-    translate([length, -1.75 * DIM_SAMPLE_SCALE]) rotate([0, 0, 90])
-        line(length=length);
-
-    //  The following runs through all the dimension types
-    for (i = [0:4]) {
-        translate([0, -.5 * i * DIM_SAMPLE_SCALE])
-            dimensions(length=length, loc=i, mytext=mytext);
-    }
-}
-
 
 module sample_leaderlines() {
 
@@ -756,11 +727,8 @@ module all_samples()
 
     sample_lines();
 
-    translate([-5.5 * DIM_SAMPLE_SCALE, 0])
-    sample_dimensions();
-
-    translate([-11 * DIM_SAMPLE_SCALE, 0])
-    sample_dimensions_with_text(mytext="my variable");
+    translate([-5.5 * DIM_SAMPLE_SCALE, 0]) sample_dimensions();
+    translate([-11 * DIM_SAMPLE_SCALE, 0]) sample_dimensions(true);
 
     translate([4 * DIM_SAMPLE_SCALE, 0]) sample_circlecenter();
     translate([-2 * DIM_SAMPLE_SCALE, 3 * DIM_SAMPLE_SCALE]) sample_leaderlines();
