@@ -170,6 +170,23 @@ module line(length, left_arrow=false, right_arrow=false)
     }
 }
 
+/**
+ * dim_outline() - Get the outline of a 2D shape
+ * weight: Thickness of outline relative dim_linewidth(). Defaults to 1
+ *
+ * Creates an outline of the child 2D shapes. For example, this can convert a
+ * solid circle into an open ring. This is important when creating 2D drawings.
+ * OpenSCAD merges all overlapping shapes when rendering 2D objects, so if the
+ * object is solid, it is impossible to have details inside the shape. By
+ * converting the shape to an outline it is possible to render additional
+ * details inside the shape.
+ */
+module dim_outline(weight=1) {
+    dim_extrude() difference() {
+        offset(delta=weight*dim_linewidth()/2) children();
+        offset(delta=-weight*dim_linewidth()/2) children();
+    }
+}
 
 module circle_center(radius, size=dim_linewidth()*6)
 {
@@ -269,15 +286,9 @@ module leader_line(angle, radius, angle_length, horz_line_length,
             translate([horz_line_length + space + text_length/2, 0]) dim_extrude()
                 text(text, size=dim_fontsize(), valign="center", halign="center");
 
-            if (do_circle) {
+            if (do_circle)
                 translate([(horz_line_length + space + text_length/2), 0])
-                dim_extrude() difference() {
-                    circle(r=text_length + space - dim_linewidth(),
-                            center=true, $fn=100);
-                    circle(r=text_length + space - dim_linewidth() * 2,
-                            center=true, $fn=100);
-                }
-            }
+                    dim_outline() circle(text_length/2 + space);
 
         } else {
             translate([-horz_line_length, 0]) line(horz_line_length);
@@ -713,9 +724,7 @@ module sample_leaderlines() {
         leader_line(angle=i * 15, radius=.25 * DIM_SAMPLE_SCALE,
                     angle_length=(i * .25 * DIM_SAMPLE_SCALE),
                     horz_line_length=.5 * DIM_SAMPLE_SCALE, direction=DIM_RIGHT,
-                    text=str("leader line angle: ", i * 15 + 90),
-                    do_circle=false
-                   );
+                    text=str("leader line angle: ", i * 15 + 90));
     }
 
     for (i = [1:7]) {
