@@ -93,6 +93,7 @@ DIM_LOWER_RIGHT = 3;
  * appearance of dimension lines.
  *
  * Variable
+ * $dim_font        - Typeface for dimension labels. (default: OpenSCAD default)
  * $dim_fontsize    - Size of font in base units. Is approximately the height
  *                    of a single line of text. (default: 0.175)
  *                    By default all the drawing sizes are scaled from font
@@ -105,10 +106,16 @@ DIM_LOWER_RIGHT = 3;
  * $dim_fontsize is set to about 5% of the object length, or 0.175 units.
  */
 
-// configuration for font size, line size, and whether to extrude into 3D
+// configuration for font, font size, line size and whether to extrude into 3D
+function dim_font() = $dim_font ? $dim_font : undef;
 function dim_fontsize() = $dim_fontsize ? $dim_fontsize : 0.175;
 function dim_linewidth() = $dim_linewidth ? $dim_linewidth : dim_fontsize() / 7;
 function dim_extrude_flag() = $dim_extrude ? $dim_extrude : true;
+
+// BUG: The OpenSCAD built in font (at least on the Debian packaged version) is
+// missing some symbols. ex. the diameter '⌀' glyph. Uncomment the following if
+// you have problems with the font.
+//$dim_font="FreeSans";
 
 /**
  * dim_extrude() - Helper to optionally extrude 2D dimension objects to 3D.
@@ -223,7 +230,8 @@ module dimensions(length, loc="center", mytext=undef)
         line(length/2-space/2, left_arrow=true);
 
         translate([length/2, 0]) dim_extrude()
-            text(_label, size=dim_fontsize(), halign="center", valign="center");
+            text(_label, size=dim_fontsize(), font=dim_font(),
+                 halign="center", valign="center");
 
         translate([length/2+space/2, 0])
             line(length/2-space/2, right_arrow=true);
@@ -232,20 +240,22 @@ module dimensions(length, loc="center", mytext=undef)
          line(length, left_arrow=true, right_arrow=true);
 
          translate([-dim_fontsize(), 0]) dim_extrude()
-             text(_label, size=dim_fontsize(), halign="right", valign="center");
+             text(_label, size=dim_fontsize(), font=dim_font(),
+                  halign="right", valign="center");
 
     } else if (loc == "right") {
         line(length, left_arrow=true, right_arrow=true);
 
         translate([length+dim_fontsize(), 0]) dim_extrude()
-            text(_label, size=dim_fontsize(), valign="center");
+            text(_label, size=dim_fontsize(), font=dim_font(), valign="center");
 
     } else if (loc == "outside") {
         translate([-length/2, 0])
             line(length/2, right_arrow=true);
 
         translate([length/2, 0]) dim_extrude()
-            text(_label, size=dim_fontsize(), halign="center", valign="center");
+            text(_label, size=dim_fontsize(), font=dim_font(),
+                 halign="center", valign="center");
 
         translate([length, 0])
             line(length/2, left_arrow=true);
@@ -281,7 +291,8 @@ module leader_line(angle, radius, angle_length, horz_line_length,
 
             // Using centered text so that the 'do_circle' feature looks correct
             translate([horz_line_length + space + text_length/2, 0]) dim_extrude()
-                text(text, size=dim_fontsize(), valign="center", halign="center");
+                text(text, size=dim_fontsize(), font=dim_font(),
+                     valign="center", halign="center");
 
             if (do_circle)
                 translate([(horz_line_length + space + text_length/2), 0])
@@ -291,7 +302,8 @@ module leader_line(angle, radius, angle_length, horz_line_length,
             translate([-horz_line_length, 0]) line(horz_line_length);
 
             translate([-(horz_line_length + space), 0]) dim_extrude()
-                text(text, size=dim_fontsize(), halign="right", valign="center");
+                text(text, size=dim_fontsize(), font=dim_font(),
+                     halign="right", valign="center");
         }
     }
 }
@@ -337,9 +349,9 @@ module titleblock(lines, descs, details) {
         translate([line[0] * dim_linewidth(), line[1] * dim_linewidth()])
         if (line[2] == DIM_VERT) {
             rotate([0, 0, 90]) dim_extrude()
-                text(line[3], size=dim_fontsize()*line[4]);
+                text(line[3], size=dim_fontsize()*line[4], font=dim_font());
         } else {
-            dim_extrude() text(line[3], size=dim_fontsize()*line[4]);
+            dim_extrude() text(line[3], size=dim_fontsize()*line[4], font=dim_font());
         }
     }
 
@@ -347,9 +359,9 @@ module titleblock(lines, descs, details) {
         translate([line[0] * dim_linewidth(), line[1] * dim_linewidth()])
         if (line[2] == DIM_VERT) {
             rotate([0, 0, 90])
-            dim_extrude() text(line[3], size=dim_fontsize()*line[4]);
+            dim_extrude() text(line[3], size=dim_fontsize()*line[4], font=dim_font());
         } else {
-            dim_extrude() text(line[3], size=dim_fontsize()*line[4]);
+            dim_extrude() text(line[3], size=dim_fontsize()*line[4], font=dim_font());
         }
     }
 
@@ -514,7 +526,8 @@ module sample_revisionblock(revisions) {
             for (col = [0:2]) {
                 translate([(cols[col] + desc_x) * dim_linewidth(),
                     ((row + 1) * row_height + desc_y) * dim_linewidth()])
-                dim_extrude() text(revisions[row][col], size=dim_fontsize());
+                dim_extrude() text(revisions[row][col], size=dim_fontsize(),
+                                  font=dim_font());
             }
         }
     }
