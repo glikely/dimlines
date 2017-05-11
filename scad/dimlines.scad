@@ -72,15 +72,6 @@
  *
  */
 
-
-//  these variables are used within the modules
-DIM_HORZ = 0;
-DIM_VERT = 1;
-DIM_UPPER_LEFT = 0;
-DIM_UPPER_RIGHT = 1;
-DIM_LOWER_LEFT = 2;
-DIM_LOWER_RIGHT = 3;
-
 /* Constants related to the annotation lines
  *
  * Because the dimension of the part to be documented can vary widely, you
@@ -344,37 +335,23 @@ module titleblock(lines, descs, details) {
 
     for (line = lines) {
         translate([line[0]*dim_linewidth(), line[1]*dim_linewidth()])
-        if (line[2] == DIM_VERT) {
-            rotate([0, 0, -90])
+        if (line[2] == "vert") rotate([0, 0, -90])
             line(length=line[3] * dim_linewidth(),
                  $dim_linewidth=dim_linewidth() * line[4]);
-        } else {
+        else if (line[2] == "horz")
             line(length=(line[3] + 1) * dim_linewidth(),
                  $dim_linewidth=dim_linewidth() * line[4]);
-        }
-
     }
 
-    for (line = descs) {
+    for (line = descs)
         translate([line[0] * dim_linewidth(), line[1] * dim_linewidth()])
-        if (line[2] == DIM_VERT) {
-            rotate([0, 0, 90]) dim_extrude()
+            rotate([0, 0, line[2]=="vert" ? 90 : 0]) dim_extrude()
                 text(line[3], size=dim_fontsize()*line[4], font=dim_font());
-        } else {
-            dim_extrude() text(line[3], size=dim_fontsize()*line[4], font=dim_font());
-        }
-    }
 
-    for (line = details) {
+    for (line = details)
         translate([line[0] * dim_linewidth(), line[1] * dim_linewidth()])
-        if (line[2] == DIM_VERT) {
-            rotate([0, 0, 90])
-            dim_extrude() text(line[3], size=dim_fontsize()*line[4], font=dim_font());
-        } else {
-            dim_extrude() text(line[3], size=dim_fontsize()*line[4], font=dim_font());
-        }
-    }
-
+            rotate([0, 0, line[2]=="vert" ? 90 : 0]) dim_extrude()
+                text(line[3], size=dim_fontsize()*line[4], font=dim_font());
 }
 
 /* Scale examples to match size of dimension elements */
@@ -405,71 +382,71 @@ module sample_titleblock1() {
 
     lines = [
         // horizontal lines
-        [cols[0], rows[0], DIM_HORZ, title_width, 2],
-        [cols[0], rows[1], DIM_HORZ, title_width, 1],
-        [cols[2], rows[2], DIM_HORZ, title_width - cols[2] - 1, 1],
-        [cols[3], rows[3], DIM_HORZ, title_width - cols[3] - 1, 1],
-        [cols[0], rows[4] - 1, DIM_HORZ, title_width, 2],
+        [cols[0], rows[0], "horz", title_width, 2],
+        [cols[0], rows[1], "horz", title_width, 1],
+        [cols[2], rows[2], "horz", title_width - cols[2] - 1, 1],
+        [cols[3], rows[3], "horz", title_width - cols[3] - 1, 1],
+        [cols[0], rows[4] - 1, "horz", title_width, 2],
 
         // vertical lines
-        [0, 0, DIM_VERT, row_height * 4, 2],
-        [cols[1], rows[0], DIM_VERT, row_height, 1],
-        [cols[2], rows[0], DIM_VERT, row_height * 4, 1],
-        [cols[3], rows[0], DIM_VERT, row_height * 4, 1],
-        [cols[4], rows[3], DIM_VERT, row_height, 1],
-        [cols[5], rows[3], DIM_VERT, row_height, 1],
-        [title_width - 1, 0, DIM_VERT, row_height * 4, 2],
+        [0, 0, "vert", row_height * 4, 2],
+        [cols[1], rows[0], "vert", row_height, 1],
+        [cols[2], rows[0], "vert", row_height * 4, 1],
+        [cols[3], rows[0], "vert", row_height * 4, 1],
+        [cols[4], rows[3], "vert", row_height, 1],
+        [cols[5], rows[3], "vert", row_height, 1],
+        [title_width - 1, 0, "vert", row_height * 4, 2],
     ];
 
     descs = [
-        [cols[0] + desc_x, rows[0] + desc_y, DIM_HORZ,
+        [cols[0] + desc_x, rows[0] + desc_y, "horz",
             "Responsible dep", desc_size],
-        [cols[1] + desc_x, rows[0] + desc_y, DIM_HORZ,
+        [cols[1] + desc_x, rows[0] + desc_y, "horz",
             "Technical reference", desc_size],
-        [cols[2] + desc_x, rows[0] + desc_y, DIM_HORZ,
+        [cols[2] + desc_x, rows[0] + desc_y, "horz",
             "Creator", desc_size],
-        [cols[3] + desc_x, rows[0] + desc_y, DIM_HORZ,
+        [cols[3] + desc_x, rows[0] + desc_y, "horz",
             "Approval person", desc_size],
-        [cols[2] + desc_x, rows[1] + desc_y, DIM_HORZ,
+        [cols[2] + desc_x, rows[1] + desc_y, "horz",
             "Document type", desc_size],
-        [cols[3] + desc_x, rows[1] + desc_y, DIM_HORZ,
+        [cols[3] + desc_x, rows[1] + desc_y, "horz",
             "Document status", desc_size],
-        [cols[2] + desc_x, rows[2] + desc_y, DIM_HORZ,
+        [cols[2] + desc_x, rows[2] + desc_y, "horz",
             "Title", desc_size],
-        [cols[3] + desc_x, rows[2] + desc_y, DIM_HORZ,
+        [cols[3] + desc_x, rows[2] + desc_y, "horz",
             "Identification number", desc_size],
-        [cols[3] + desc_x, rows[3] + desc_y, DIM_HORZ,
+        [cols[3] + desc_x, rows[3] + desc_y, "horz",
             "Rev", desc_size],
-        [cols[4] + desc_x, rows[3] + desc_y, DIM_HORZ,
+        [cols[4] + desc_x, rows[3] + desc_y, "horz",
             "Date of issue", desc_size],
-        [cols[5] + desc_x, rows[3] + desc_y, DIM_HORZ,
+        [cols[5] + desc_x, rows[3] + desc_y, "horz",
             "Sheet", desc_size]
     ];
 
     details = [
-        [cols[0] + desc_x,  rows[0] + det_y, DIM_HORZ,
+        [cols[0] + desc_x,  rows[0] + det_y, "horz",
             " ", 1], //Responsible dep.
-        [cols[1] + desc_x, rows[0] + det_y, DIM_HORZ,
+        [cols[1] + desc_x, rows[0] + det_y, "horz",
             " ", 1], //Technical reference
-        [cols[2] + desc_x, rows[0] + det_y, DIM_HORZ,
+        [cols[2] + desc_x, rows[0] + det_y, "horz",
             "D. Smiley ", 1], //Creator
-        [cols[3] + desc_x, rows[0] + det_y, DIM_HORZ,
+        [cols[3] + desc_x, rows[0] + det_y, "horz",
             " ", 1], //Approval person
-        [cols[0] + desc_x + 5, rows[2] + det_y, DIM_HORZ,
+        [cols[0] + desc_x + 5, rows[2] + det_y, "horz",
             "My OpenSCAD Project", 1],
-        [cols[2] + desc_x, rows[1] + det_y, DIM_HORZ,
+        [cols[2] + desc_x, rows[1] + det_y, "horz",
             " ", 1], //Document type
-        [cols[3] + desc_x, rows[1] + det_y, DIM_HORZ,
+        [cols[3] + desc_x, rows[1] + det_y, "horz",
             "First issue", 1], //Document status
-        [cols[2] + desc_x, rows[2] + det_y, DIM_HORZ,
+        [cols[2] + desc_x, rows[2] + det_y, "horz",
             "Sample Part", 1], //Title
-        [cols[3] + desc_x, rows[2] + det_y, DIM_HORZ,
+        [cols[3] + desc_x, rows[2] + det_y, "horz",
             "123", 1], //Identification number
-        [cols[3] + desc_x, rows[3] + det_y, DIM_HORZ,
+        [cols[3] + desc_x, rows[3] + det_y, "horz",
             " ", 1], //Rev
-        [cols[4] + desc_x, rows[3] + det_y, DIM_HORZ,
+        [cols[4] + desc_x, rows[3] + det_y, "horz",
             "2013-3-31", 1], //Date of issue
-        [cols[5] + desc_x, rows[3] + det_y, DIM_HORZ,
+        [cols[5] + desc_x, rows[3] + det_y, "horz",
             "1/100", 1] //Sheet
     ];
 
@@ -492,25 +469,25 @@ module sample_revisionblock(revisions) {
     // draw
     lines = [
         // horizontal lines
-        [cols[0], rows[0], DIM_HORZ, revision_width, 1],
-        [cols[0], rows[1], DIM_HORZ, revision_width, 1],
-        [cols[0], rows[2], DIM_HORZ, revision_width, 1],
+        [cols[0], rows[0], "horz", revision_width, 1],
+        [cols[0], rows[1], "horz", revision_width, 1],
+        [cols[0], rows[2], "horz", revision_width, 1],
 
         // vertical lines
-        [cols[0], rows[0], DIM_VERT, row_height * 2, 1],
-        [cols[1], rows[0], DIM_VERT, row_height, 1],
-        [cols[2], rows[0], DIM_VERT, row_height, 1],
-        [cols[3], rows[0], DIM_VERT, row_height * 2, 1],
+        [cols[0], rows[0], "vert", row_height * 2, 1],
+        [cols[1], rows[0], "vert", row_height, 1],
+        [cols[2], rows[0], "vert", row_height, 1],
+        [cols[3], rows[0], "vert", row_height * 2, 1],
     ];
 
     descs = [
-        [cols[0] + desc_x, rows[0] + desc_y, DIM_HORZ,
+        [cols[0] + desc_x, rows[0] + desc_y, "horz",
             "Rev.", desc_size],
-        [cols[1] + desc_x, rows[0] + desc_y, DIM_HORZ,
+        [cols[1] + desc_x, rows[0] + desc_y, "horz",
             "Date", desc_size],
-        [cols[2] + desc_x, rows[0] + desc_y, DIM_HORZ,
+        [cols[2] + desc_x, rows[0] + desc_y, "horz",
             "Initials", desc_size],
-        [cols[1] + desc_x, rows[1] + desc_y, DIM_HORZ,
+        [cols[1] + desc_x, rows[1] + desc_y, "horz",
             "Revisions", desc_size],
     ];
 
@@ -565,23 +542,23 @@ module sample_titleblock2() {
 
     lines = [
         // horizontal lines
-        [-.5, 0, DIM_HORZ, title_width, 1],
+        [-.5, 0, "horz", title_width, 1],
 
-        [cols[2], rows[1], DIM_HORZ, cols[3] - cols[2] - .5, 1],
-        [cols[0], rows[2], DIM_HORZ, cols[1] - cols[0] - .5, 1],
-        [cols[0], rows[3], DIM_HORZ, cols[3] - .5, 1],
-        [cols[0], rows[4], DIM_HORZ, cols[2] - .5, 1],
-        [cols[0], rows[5], DIM_HORZ, cols[3] - .5, 1],
-        [cols[0], rows[6], DIM_HORZ, cols[2] - .5, 1],
-        [cols[0], rows[7], DIM_HORZ, cols[2] - .5, 1],
+        [cols[2], rows[1], "horz", cols[3] - cols[2] - .5, 1],
+        [cols[0], rows[2], "horz", cols[1] - cols[0] - .5, 1],
+        [cols[0], rows[3], "horz", cols[3] - .5, 1],
+        [cols[0], rows[4], "horz", cols[2] - .5, 1],
+        [cols[0], rows[5], "horz", cols[3] - .5, 1],
+        [cols[0], rows[6], "horz", cols[2] - .5, 1],
+        [cols[0], rows[7], "horz", cols[2] - .5, 1],
 
-        [cols[0], rows[7], DIM_HORZ, title_width, 1],
+        [cols[0], rows[7], "horz", title_width, 1],
 
         // vertical lines
-        [cols[0], rows[0], DIM_VERT, -rows[7], 1],
-        [cols[1], rows[0], DIM_VERT, -rows[7], 1],
-        [cols[2], rows[0], DIM_VERT, -rows[7], 1],
-        [cols[3], rows[0], DIM_VERT, -rows[7], 1],
+        [cols[0], rows[0], "vert", -rows[7], 1],
+        [cols[1], rows[0], "vert", -rows[7], 1],
+        [cols[2], rows[0], "vert", -rows[7], 1],
+        [cols[3], rows[0], "vert", -rows[7], 1],
     ];
 
     part_desc = ["Material", "Finish", "Weight", "Part No."];
@@ -618,34 +595,34 @@ module sample_titleblock2() {
     descs = [
 
         // part description
-        [cols[0] + desc_x, rows[2] + desc_y, DIM_HORZ, part_desc[0], desc_size],
-        [cols[0] + desc_x, rows[3] + desc_y, DIM_HORZ, part_desc[1], desc_size],
-        [cols[0] + desc_x, rows[4] + desc_y, DIM_HORZ, part_desc[2], desc_size],
-        [cols[0] + desc_x, rows[5] + desc_y, DIM_HORZ, part_desc[3], desc_size],
+        [cols[0] + desc_x, rows[2] + desc_y, "horz", part_desc[0], desc_size],
+        [cols[0] + desc_x, rows[3] + desc_y, "horz", part_desc[1], desc_size],
+        [cols[0] + desc_x, rows[4] + desc_y, "horz", part_desc[2], desc_size],
+        [cols[0] + desc_x, rows[5] + desc_y, "horz", part_desc[3], desc_size],
 
         // documentation description
-        [cols[1] + desc_x, rows[3] + desc_y, DIM_HORZ, doc_desc[0], desc_size],
-        [cols[1] + desc_x, rows[4] + desc_y, DIM_HORZ, doc_desc[1], desc_size],
-        [cols[1] + desc_x, rows[5] + desc_y, DIM_HORZ, doc_desc[2], desc_size],
-        [cols[1] + desc_x, rows[6] + desc_y, DIM_HORZ, doc_desc[3], desc_size],
+        [cols[1] + desc_x, rows[3] + desc_y, "horz", doc_desc[0], desc_size],
+        [cols[1] + desc_x, rows[4] + desc_y, "horz", doc_desc[1], desc_size],
+        [cols[1] + desc_x, rows[5] + desc_y, "horz", doc_desc[2], desc_size],
+        [cols[1] + desc_x, rows[6] + desc_y, "horz", doc_desc[3], desc_size],
    ];
 
     details = [
-        [cols[0] + desc_x, rows[0] + det_y, DIM_HORZ, part_details[0], 1.5],
-        [cols[0] + desc_x, rows[2] + det_y, DIM_HORZ, part_details[1], 1],
-        [cols[0] + desc_x, rows[3] + det_y, DIM_HORZ, part_details[2], 1],
-        [cols[0] + desc_x, rows[4] + det_y, DIM_HORZ, part_details[3], 1],
-        [cols[0] + desc_x, rows[5] + det_y, DIM_HORZ, part_details[4], 1],
+        [cols[0] + desc_x, rows[0] + det_y, "horz", part_details[0], 1.5],
+        [cols[0] + desc_x, rows[2] + det_y, "horz", part_details[1], 1],
+        [cols[0] + desc_x, rows[3] + det_y, "horz", part_details[2], 1],
+        [cols[0] + desc_x, rows[4] + det_y, "horz", part_details[3], 1],
+        [cols[0] + desc_x, rows[5] + det_y, "horz", part_details[4], 1],
 
-        [cols[1] + desc_x * 2, rows[3] + det_y, DIM_HORZ, doc_details[0], 1],
-        [cols[1] + desc_x * 2, rows[4] + det_y, DIM_HORZ, doc_details[1], 1],
-        [cols[1] + desc_x * 2, rows[5] + det_y, DIM_HORZ, doc_details[2], 1],
-        [cols[1] + desc_x * 2, rows[6] + det_y, DIM_HORZ, doc_details[3], 1],
+        [cols[1] + desc_x * 2, rows[3] + det_y, "horz", doc_details[0], 1],
+        [cols[1] + desc_x * 2, rows[4] + det_y, "horz", doc_details[1], 1],
+        [cols[1] + desc_x * 2, rows[5] + det_y, "horz", doc_details[2], 1],
+        [cols[1] + desc_x * 2, rows[6] + det_y, "horz", doc_details[3], 1],
 
         // Organization Details
-        [cols[1] + desc_x, rows[1] + det_y, DIM_HORZ, org_details[0], 1.5],
-        [cols[2] + desc_x, rows[0] + det_y, DIM_HORZ, org_details[1], 1.5],
-        [cols[2] + desc_x, rows[1] + det_y, DIM_HORZ, org_details[2], 1],
+        [cols[1] + desc_x, rows[1] + det_y, "horz", org_details[0], 1.5],
+        [cols[2] + desc_x, rows[0] + det_y, "horz", org_details[1], 1.5],
+        [cols[2] + desc_x, rows[1] + det_y, "horz", org_details[2], 1],
 
     ];
 
