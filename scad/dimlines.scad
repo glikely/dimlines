@@ -51,7 +51,7 @@
  *      numeric dimension.
  *
  *  leader_line(angle, radius, angle_length, horz_line_length,
- *              direction=DIM_RIGHT, line_width, text)
+ *              direction=undef, line_width, text)
  *
  *      for use in pointing to the edge of a circle and showing text
  *
@@ -63,7 +63,7 @@
  *      angle_length is distance that the leader line takes until meeting the
  *      horizontal line. Once the angled line meets the horizontal line, that
  *      line will either extend to the right or left.  direction and therefore
- *      be either DIM_RIGHT or DIM_LEFT.  line_width typically would be whatever
+ *      be either "right" or "left".  line_width typically would be whatever
  *      constant you have selected for all your dimensioned lines. Finally, the
  *      text will be the value that you wish to show, such as R 0.500.
  *
@@ -74,8 +74,6 @@
 
 
 //  these variables are used within the modules
-DIM_LEFT = 1;
-DIM_RIGHT = 2;
 DIM_HORZ = 0;
 DIM_VERT = 1;
 DIM_UPPER_LEFT = 0;
@@ -208,7 +206,8 @@ module circle_center(radius, size=dim_linewidth()*6)
         rotate([0,0,i]) translate([-size/2, 0]) line(size);
 }
 
-function text_or_length(length, mytext) = mytext ? mytext : str(length);
+function text_or_length(length, mytext, prefix="") =
+    mytext ? mytext : str(prefix, length);
 
 /**
  * dimensions() - Draw a dimension line showing measurement between two points
@@ -264,46 +263,57 @@ module dimensions(length, loc="center", mytext=undef)
     }
 }
 
-module leader_line(angle, radius, angle_length, horz_line_length,
-        direction=DIM_RIGHT, text, do_circle=false) {
-    /* leader_line
-     *
-     * Creates a line that points directly at a center point from the given
-     * radius.
-     * Then, a short horzizontal line is generated, followed by text.  The
-     * direction of the horizontal short line defaults to the right, the
-     * choice made by either DIM_RIGHT or DIM_LEFT
-     */
-
-    text_length = len(text) * dim_fontsize() * 0.6;
+/**
+ * leader_line() - Create a labelled line pointing to a circle edge
+ * radius: Radius of circle being pointed to
+ * text: text label to place at end of leader line. If omitted, diameter is shown instead
+ * angle: angle to draw arrow portion of leader line
+ * angle_length: length of arrow line
+ * horz_line_length: length of horizontal portion of leader line
+ * direction: If specified, force direction of horizontal line.  Valid values
+ *            are: "left" or "right"
+ * do_circle: if true draw a circle around the text label. Useful for callouts.
+ *
+ * Creates a line that points directly at a center point from the given radius.
+ * Then, a short horzizontal line is generated, followed by text.  The
+ * direction of the horizontal short line defaults to the right for angles -90
+ * to 90, and left otherwise, but can be forced by using the 'direction'
+ * argument.
+ */
+module leader_line(radius, text=undef, angle=45, angle_length=dim_fontsize()*4,
+                   horz_line_length=dim_fontsize()*4,
+                   direction=undef, do_circle=false)
+{
+    label = text_or_length(radius*2, text, prefix="⌀");
+    text_length = len(label) * dim_fontsize() * 0.6;
     space = dim_fontsize() * 0.6;
-    real_angle_length = angle_length < dim_linewidth()*2 ? dim_linewidth()*2 : angle_length;
+    alen = angle_length < dim_linewidth()*2 ? dim_linewidth()*2 : angle_length;
 
-    rotate([0, 0, angle]) translate([radius, 0])
-        line(real_angle_length, left_arrow=true);
+    dir_left = direction ? direction == "left" :
+                            (abs(angle) % 360 > 90) && (abs(angle) % 360 < 270);
 
-    rotate([0, 0, angle])
-    translate([radius + real_angle_length, 0])
-    rotate([0, 0, -angle])
-    union() {
-        if (direction == DIM_RIGHT) {
-            line(horz_line_length);
+    // Rotate to angle of arrow
+    rotate([0, 0, angle]) {
+        // Draw angled arrow
+        translate([radius, 0]) line(alen, left_arrow=true);
 
-            // Using centered text so that the 'do_circle' feature looks correct
-            translate([horz_line_length + space + text_length/2, 0]) dim_extrude()
-                text(text, size=dim_fontsize(), font=dim_font(),
-                     valign="center", halign="center");
+        // Move out to end of arrow and rotate back to horizontal
+        translate([radius + alen, 0]) rotate([0, 0, -angle]) {
 
-            if (do_circle)
-                translate([(horz_line_length + space + text_length/2), 0])
+            // Draw horizontal line
+            translate([dir_left ? -horz_line_length : 0, 0])
+                line(horz_line_length);
+
+            // Draw label. Centered text is used to make do_circle test simpler.
+            text_pos = horz_line_length + space + text_length/2;
+            translate([text_pos * (dir_left ? -1 : 1), 0]) {
+                dim_extrude()
+                    text(label, size=dim_fontsize(), font=dim_font(),
+                         valign="center", halign="center");
+
+                if (do_circle)
                     dim_outline() circle(text_length/2 + space);
-
-        } else {
-            translate([-horz_line_length, 0]) line(horz_line_length);
-
-            translate([-(horz_line_length + space), 0]) dim_extrude()
-                text(text, size=dim_fontsize(), font=dim_font(),
-                     halign="right", valign="center");
+            }
         }
     }
 }
@@ -695,31 +705,66 @@ module sample_dimensions(with_text=false)
     }
 }
 
-module sample_leaderlines() {
+/**
+ * sample_leaderlines() - Show sample leader lines
+ */
+module sample_leaderlines(radius=0.25*DIM_SAMPLE_SCALE)
+{
+    // Simple call to leader_line() shows circle diameter
+    leader_line(radius);
 
-    radius = .25 * DIM_SAMPLE_SCALE;
-    for (i = [0:6]) {
-        leader_line(angle=i * 15, radius=.25 * DIM_SAMPLE_SCALE,
-                    angle_length=(i * .25 * DIM_SAMPLE_SCALE),
-                    horz_line_length=.5 * DIM_SAMPLE_SCALE, direction=DIM_RIGHT,
-                    text=str("leader line angle: ", i * 15 + 90));
+    // Angle of line can be specified
+    for (angle = [90:30:210])
+        leader_line(radius, str(angle, "° leader line"), angle=angle);
+
+    // A circle can be placed around the label
+    for (i = [0:3]) {
+        labels = ["A", "B", "C", "D"];
+        angle = -(i*30 + 30);
+        text_y = (i+2) * 2 * dim_fontsize();
+        alen = abs(text_y / sin(angle)) - radius;
+
+        leader_line(radius, labels[i], do_circle=true, angle=angle, angle_length=alen);
+    }
+}
+
+/**
+ * sample_leaderlines_lr() - Show leader lines forced to the left & right
+ *
+ * Note: The alen & hlen calculations are simply to keep the sample lines
+ * nicely arranged. Normally you won't bother with calculating the location so
+ * precisely.
+ */
+module sample_leaderlines_lr(radius=0.5 * DIM_SAMPLE_SCALE)
+{
+    dim_outline() circle(radius);
+
+    // Simple call to leader_line() shows circle diameter
+    leader_line(radius);
+
+    // Leader lines forced to the left
+    for (angle = [70:20:210]) {
+        text_y = ((180-angle)/10) * dim_fontsize();
+        alen = abs(text_y / sin(angle)) - radius;
+        hlen = DIM_SAMPLE_SCALE*1.5 + (text_y/tan(angle));
+
+        leader_line(radius, angle=angle, angle_length=alen, horz_line_length = hlen,
+                    direction="left", text=str(angle, "° left"));
     }
 
-    for (i = [1:7]) {
-        leader_line(angle=i * 20 + 90, radius=.25 * DIM_SAMPLE_SCALE,
-                    angle_length=.75 * DIM_SAMPLE_SCALE,
-                    horz_line_length=.5 * DIM_SAMPLE_SCALE, direction=DIM_LEFT,
-                    text=str("leader line angle: ", i * 20 + 90));
+    // Leader lines forced to the right
+    for (angle = [-110:20:25]) {
+        // These calculations make the sample lines line up nicely.  Normally
+        // you wouldn't bother with precisely calculating alen & hlen.
+        text_y = (angle/10) * dim_fontsize();
+        alen = abs(text_y / sin(angle)) - radius;
+        hlen = DIM_SAMPLE_SCALE*1.5 - (text_y/tan(angle));
+
+        leader_line(radius, angle=angle, angle_length=alen, horz_line_length = hlen,
+                    direction="right", text=str(angle, "° right"));
     }
-    for (i = [1:4]) {
-        leader_line(angle=-i * 20, radius=.25 * DIM_SAMPLE_SCALE,
-                    angle_length=1.5 * DIM_SAMPLE_SCALE,
-                    horz_line_length=.25 * DIM_SAMPLE_SCALE, direction=DIM_RIGHT,
-                    text=str(i),
-                    do_circle=true
-                   );
-    }
- }
+
+}
 
 module sample_circlecenter() {
 
@@ -745,6 +790,7 @@ module all_samples()
 
     translate([4 * DIM_SAMPLE_SCALE, 0]) sample_circlecenter();
     translate([-2 * DIM_SAMPLE_SCALE, 3 * DIM_SAMPLE_SCALE]) sample_leaderlines();
+    translate([-9 * DIM_SAMPLE_SCALE, 3 * DIM_SAMPLE_SCALE]) sample_leaderlines_lr();
     translate([3 * DIM_SAMPLE_SCALE, 4 * DIM_SAMPLE_SCALE]) sample_titleblock1();
     translate([0 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE]) sample_titleblock2();
 }
