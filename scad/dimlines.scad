@@ -1,6 +1,7 @@
 /* Dimension lines for OpenSCAD.
  *
  * Copyright 2013-2016 Don Smiley
+ * Copyright 2017 Grant Likely <grant.likely@secretlab.ca>
  *
  * SPDX-License-Identifier: MIT
  *
