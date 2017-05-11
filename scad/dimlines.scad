@@ -72,7 +72,8 @@
  *
  */
 
-/* Constants related to the annotation lines
+/**
+ * Constants related to the annotation lines
  *
  * Because the dimension of the part to be documented can vary widely, you
  * probably are going to need to adjust the parameters to fit the context of
@@ -90,10 +91,40 @@
  *                    the other sizes will be adjusted accordingly.
  * $dim_linewidth   - Width of lines. (default: $dim_fontsize/7)
  * $dim_extrude_flag - (bool) If true, extrude dimension lines into 3D objects.
+ * $dim_mmsize      - Size of mm in base units. OpenSCAD models normally use a
+ *                    1:1 mapping between base units and mm, and there should
+ *                    be no reason to set $dim_mmsize. However, if you're
+ *                    working with a model that uses a different scale, then
+ *                    this parameter can be changed. (default: 1)
+ * $dim_units       - Measurement units to use when displaying dimensions.
+ *                    Supported units include: "mm", "cm", "m", "inch", "feet",
+ *                    "points". (default: "mm")
  *
  * For example, the following parameters were used for a part 3.5 units long.
  * $dim_fontsize is set to about 5% of the object length, or 0.175 units.
  */
+
+// Shortcuts for units of measure
+mm = 1;
+inch = mm * 25.4;
+foot = inch * 12;
+pt = inch/72;
+
+// Table of units. Each tuple is [name, scale, symbol]
+units = [
+    ["mm", 1, " mm"],
+    ["cm", 0.1, " cm"],
+    ["m", 0.001, " m"],
+    ["inch", 1/inch, "\""],
+    ["feet", 1/foot, "\'"],
+    ["points", 1/pt, " pt"]
+];
+
+// configuration for units of measurement
+function dim_mmsize() = $dim_mmsize ? $dim_mmsize : mm;
+function dim_units() = $dim_units ? $dim_units : "mm";
+function dim_unitscale() = units[search([dim_units()], units)[0]][1] / dim_mmsize();
+function dim_unitsymbol() = units[search([dim_units()], units)[0]][2];
 
 // configuration for font, font size, line size and whether to extrude into 3D
 function dim_font() = $dim_font ? $dim_font : undef;
@@ -198,7 +229,7 @@ module circle_center(radius, size=dim_linewidth()*6)
 }
 
 function text_or_length(length, mytext, prefix="") =
-    mytext ? mytext : str(prefix, length);
+    mytext ? mytext : str(prefix, length * dim_unitscale(), dim_unitsymbol());
 
 /**
  * dimensions() - Draw a dimension line showing measurement between two points
@@ -683,6 +714,27 @@ module sample_dimensions(with_text=false)
 }
 
 /**
+ * sample_units() - Sample use of different measurement units
+ */
+module sample_units(change_mmsize=false)
+{
+    height = (len(units)+1) * 0.5 * DIM_SAMPLE_SCALE;
+    length = 2.5 * DIM_SAMPLE_SCALE;
+
+    // The following two lines are vertical lines that bracket the dimensions
+    rotate([0, 0, -90]) line(height);
+    translate([length, 0]) rotate([0, 0, -90]) line(height);
+
+    // The following runs through all the dimension units
+    for (i = [0:len(units)-1]) {
+        $dim_units = units[i][0];
+        $dim_mmsize = change_mmsize ? units[i][1] : 1;
+        translate([0, -0.5 * (i+1) * DIM_SAMPLE_SCALE])
+            dimensions(length);
+    }
+}
+
+/**
  * sample_leaderlines() - Show sample leader lines
  */
 module sample_leaderlines(radius=0.25*DIM_SAMPLE_SCALE)
@@ -764,12 +816,14 @@ module all_samples()
 
     translate([-5.5 * DIM_SAMPLE_SCALE, 0]) sample_dimensions();
     translate([-11 * DIM_SAMPLE_SCALE, 0]) sample_dimensions(true);
+    translate([-5.5 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE]) sample_units();
+    translate([-11 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE]) sample_units(true);
 
     translate([4 * DIM_SAMPLE_SCALE, 0]) sample_circlecenter();
     translate([-2 * DIM_SAMPLE_SCALE, 3 * DIM_SAMPLE_SCALE]) sample_leaderlines();
     translate([-9 * DIM_SAMPLE_SCALE, 3 * DIM_SAMPLE_SCALE]) sample_leaderlines_lr();
     translate([3 * DIM_SAMPLE_SCALE, 4 * DIM_SAMPLE_SCALE]) sample_titleblock1();
-    translate([0 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE]) sample_titleblock2();
+    translate([3 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE]) sample_titleblock2();
 }
 
 all_samples();
