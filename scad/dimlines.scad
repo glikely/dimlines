@@ -365,23 +365,20 @@ module titleblock(lines, descs, details) {
      *               [startx, starty, horz/vert, text, size]]
     */
 
-    for (line = lines) {
-        translate([line[0]*dim_linewidth(), line[1]*dim_linewidth()])
+    for (line = lines) translate([line[0], line[1]]) {
         if (line[2] == "vert") rotate([0, 0, -90])
-            line(length=line[3] * dim_linewidth(),
-                 $dim_linewidth=dim_linewidth() * line[4]);
+            line(line[3], $dim_linewidth=dim_linewidth() * line[4]);
         else if (line[2] == "horz")
-            line(length=(line[3] + 1) * dim_linewidth(),
-                 $dim_linewidth=dim_linewidth() * line[4]);
+            line(line[3], $dim_linewidth=dim_linewidth() * line[4]);
     }
 
     for (line = descs)
-        translate([line[0] * dim_linewidth(), line[1] * dim_linewidth()])
+        translate([line[0], line[1]])
             rotate([0, 0, line[2]=="vert" ? 90 : 0]) dim_extrude()
                 text(line[3], size=dim_fontsize()*line[4], font=dim_font());
 
     for (line = details)
-        translate([line[0] * dim_linewidth(), line[1] * dim_linewidth()])
+        translate([line[0], line[1]])
             rotate([0, 0, line[2]=="vert" ? 90 : 0]) dim_extrude()
                 text(line[3], size=dim_fontsize()*line[4], font=dim_font());
 }
@@ -389,36 +386,41 @@ module titleblock(lines, descs, details) {
 /* Scale examples to match size of dimension elements */
 DIM_SAMPLE_SCALE = dim_fontsize() / 0.175;
 
-module sample_titleblock1() {
-    /* sample titleblock
-     *
-     * Note the use of double thickness lines around the perimeter. Any line
-     * can be adjusted to be thinner or thicker.
-     *
-     * Note also that since lines are centered on their widths, some adjustments
-     * for half-width spacing is needed to avoid a jagged look on corners.
-     * You can see that in the horizontal lines in the first section that are
-     * offset by 1, which is the half-width of the outside line.
-     */
-    title_width = 300;
-    row_height = 15;
+/**
+ * sample_titleblock1() - Example of how to draw a title block
+ *
+ * Note the use of double thickness lines around the perimeter. Any line can be
+ * adjusted to be thinner or thicker.
+ *
+ * Note also that since lines are centered on their widths, some adjustments for
+ * half-width spacing is needed to avoid a jagged look on corners.  You can see
+ * that in the horizontal lines in the first section that are offset by half-width
+ * of the outside line. In this case, dim_linewidth().
+ */
+module sample_titleblock1()
+{
+    fs = dim_fontsize();
+    lw = dim_linewidth();
+    title_width = 50*fs;
+    row_height = 3*fs;
 
-    cols = [-1, 50, 114, 200, 215, 270];
-    rows = [0, -row_height, -row_height * 2, -row_height * 3, -row_height * 4];
+    cols = [0, title_width*0.167, title_width*0.333, title_width*0.667,
+            title_width*0.73, title_width*0.9];
+    rows = [0, -row_height, -row_height*2, -row_height*3, -row_height*4];
 
     // spacing tweaks to fit into the blocks
-    desc_x = 2; // column offset for start of small text
-    desc_y = -5; // row offset for start of small text
-    det_y = -13;  // row offset for start of detail text
+    desc_x = 0.2*fs; // column offset for start of small text
+    desc_y = -fs; // row offset for start of small text
+    det_y = -2.5*fs;  // row offset for start of detail text
     desc_size = .65; // relative size of description text
 
     lines = [
         // horizontal lines
-        [cols[0], rows[0], "horz", title_width, 2],
+        [cols[0]-lw, rows[0], "horz", title_width+lw*2, 2],
         [cols[0], rows[1], "horz", title_width, 1],
-        [cols[2], rows[2], "horz", title_width - cols[2] - 1, 1],
-        [cols[3], rows[3], "horz", title_width - cols[3] - 1, 1],
-        [cols[0], rows[4] - 1, "horz", title_width, 2],
+        [cols[2], rows[2], "horz", title_width - cols[2], 1],
+        [cols[3], rows[3], "horz", title_width - cols[3], 1],
+        [cols[0]-lw, rows[4], "horz", title_width+lw*2, 2],
 
         // vertical lines
         [0, 0, "vert", row_height * 4, 2],
@@ -427,76 +429,55 @@ module sample_titleblock1() {
         [cols[3], rows[0], "vert", row_height * 4, 1],
         [cols[4], rows[3], "vert", row_height, 1],
         [cols[5], rows[3], "vert", row_height, 1],
-        [title_width - 1, 0, "vert", row_height * 4, 2],
+        [title_width, 0, "vert", row_height * 4, 2],
     ];
 
     descs = [
-        [cols[0] + desc_x, rows[0] + desc_y, "horz",
-            "Responsible dep", desc_size],
-        [cols[1] + desc_x, rows[0] + desc_y, "horz",
-            "Technical reference", desc_size],
-        [cols[2] + desc_x, rows[0] + desc_y, "horz",
-            "Creator", desc_size],
-        [cols[3] + desc_x, rows[0] + desc_y, "horz",
-            "Approval person", desc_size],
-        [cols[2] + desc_x, rows[1] + desc_y, "horz",
-            "Document type", desc_size],
-        [cols[3] + desc_x, rows[1] + desc_y, "horz",
-            "Document status", desc_size],
-        [cols[2] + desc_x, rows[2] + desc_y, "horz",
-            "Title", desc_size],
-        [cols[3] + desc_x, rows[2] + desc_y, "horz",
-            "Identification number", desc_size],
-        [cols[3] + desc_x, rows[3] + desc_y, "horz",
-            "Rev", desc_size],
-        [cols[4] + desc_x, rows[3] + desc_y, "horz",
-            "Date of issue", desc_size],
-        [cols[5] + desc_x, rows[3] + desc_y, "horz",
-            "Sheet", desc_size]
+        [cols[0]+desc_x, rows[0]+desc_y, "horz", "Responsible dep", desc_size],
+        [cols[1]+desc_x, rows[0]+desc_y, "horz", "Technical reference", desc_size],
+        [cols[2]+desc_x, rows[0]+desc_y, "horz", "Creator", desc_size],
+        [cols[3]+desc_x, rows[0]+desc_y, "horz", "Approval person", desc_size],
+        [cols[2]+desc_x, rows[1]+desc_y, "horz", "Document type", desc_size],
+        [cols[3]+desc_x, rows[1]+desc_y, "horz", "Document status", desc_size],
+        [cols[2]+desc_x, rows[2]+desc_y, "horz", "Title", desc_size],
+        [cols[3]+desc_x, rows[2]+desc_y, "horz", "Identification number", desc_size],
+        [cols[3]+desc_x, rows[3]+desc_y, "horz", "Rev", desc_size],
+        [cols[4]+desc_x, rows[3]+desc_y, "horz", "Date of issue", desc_size],
+        [cols[5]+desc_x, rows[3]+desc_y, "horz", "Sheet", desc_size]
     ];
 
     details = [
-        [cols[0] + desc_x,  rows[0] + det_y, "horz",
-            " ", 1], //Responsible dep.
-        [cols[1] + desc_x, rows[0] + det_y, "horz",
-            " ", 1], //Technical reference
-        [cols[2] + desc_x, rows[0] + det_y, "horz",
-            "D. Smiley ", 1], //Creator
-        [cols[3] + desc_x, rows[0] + det_y, "horz",
-            " ", 1], //Approval person
-        [cols[0] + desc_x + 5, rows[2] + det_y, "horz",
-            "My OpenSCAD Project", 1],
-        [cols[2] + desc_x, rows[1] + det_y, "horz",
-            " ", 1], //Document type
-        [cols[3] + desc_x, rows[1] + det_y, "horz",
-            "First issue", 1], //Document status
-        [cols[2] + desc_x, rows[2] + det_y, "horz",
-            "Sample Part", 1], //Title
-        [cols[3] + desc_x, rows[2] + det_y, "horz",
-            "123", 1], //Identification number
-        [cols[3] + desc_x, rows[3] + det_y, "horz",
-            " ", 1], //Rev
-        [cols[4] + desc_x, rows[3] + det_y, "horz",
-            "2013-3-31", 1], //Date of issue
-        [cols[5] + desc_x, rows[3] + det_y, "horz",
-            "1/100", 1] //Sheet
+        [cols[0]+desc_x, rows[0]+det_y, "horz", "", 1], //Responsible dep.
+        [cols[1]+desc_x, rows[0]+det_y, "horz", "", 1], //Technical reference
+        [cols[2]+desc_x, rows[0]+det_y, "horz", "D. Smiley ", 1], //Creator
+        [cols[3]+desc_x, rows[0]+det_y, "horz", "", 1], //Approval person
+        [cols[0]+desc_x*5, rows[2]+det_y, "horz", "My OpenSCAD Project", 1],
+        [cols[2]+desc_x, rows[1]+det_y, "horz", "", 1], //Document type
+        [cols[3]+desc_x, rows[1]+det_y, "horz", "First issue", 1], //Document status
+        [cols[2]+desc_x, rows[2]+det_y, "horz", "Sample Part", 1], //Title
+        [cols[3]+desc_x, rows[2]+det_y, "horz", "123", 1], //Identification number
+        [cols[3]+desc_x, rows[3]+det_y, "horz", "", 1], //Rev
+        [cols[4]+desc_x, rows[3]+det_y, "horz", "2013-3-31", 1], //Date of issue
+        [cols[5]+desc_x, rows[3]+det_y, "horz", "1/100", 1] //Sheet
     ];
-
 
     titleblock(lines, descs, details);
 }
 
-module sample_revisionblock(revisions) {
-
+module sample_revisionblock(revisions)
+{
     // revision block headings
-    row_height = 15;
-    revision_width = 120;
-    desc_x = 2;
-    desc_y = -10;
+    fs = dim_fontsize();
+    lw = dim_linewidth();
+    title_width = 16*fs;
+    row_height = 2*fs;
+    desc_x = 0.2*fs;
+    desc_y = -1.5*fs;
     desc_size = 1;
 
-    cols = [0, 25, 80, revision_width];
+    cols = [0, title_width*3.5/16, title_width*11/16, title_width];
     rows = [0, -row_height, -row_height * 2];
+    revision_width = cols[3];
 
     // draw
     lines = [
@@ -513,78 +494,68 @@ module sample_revisionblock(revisions) {
     ];
 
     descs = [
-        [cols[0] + desc_x, rows[0] + desc_y, "horz",
-            "Rev.", desc_size],
-        [cols[1] + desc_x, rows[0] + desc_y, "horz",
-            "Date", desc_size],
-        [cols[2] + desc_x, rows[0] + desc_y, "horz",
-            "Initials", desc_size],
-        [cols[1] + desc_x, rows[1] + desc_y, "horz",
-            "Revisions", desc_size],
+        [cols[0]+desc_x, rows[0]+desc_y, "horz", "Rev.", desc_size],
+        [cols[1]+desc_x, rows[0]+desc_y, "horz", "Date", desc_size],
+        [cols[2]+desc_x, rows[0]+desc_y, "horz", "Initials", desc_size],
+        [cols[1]+desc_x, rows[1]+desc_y, "horz", "Revisions", desc_size],
     ];
 
     details = [];
     num_revisions = len(revisions);
 
-    translate([0, row_height * 2 * dim_linewidth()]) {
+    translate([0, row_height * 2]) {
         titleblock(lines, descs, details);
 
         //  now for the start of actual revisions
         //  do this piecemeal -- draw the vertical first
+        for (col = [0:len(cols)])
+            translate([cols[col], 0]) rotate([0, 0, 90])
+                line(num_revisions * row_height);
 
-        for (col = [0: len(cols)]) {
-            translate([cols[col] * dim_linewidth(), 0])
-            rotate([0, 0, 90])
-            line(num_revisions * row_height * dim_linewidth());
-        }
+        for (row = [0:len(revisions)]) {
+            translate([-lw/2, row * row_height])
+                line(revision_width+lw);
 
-        for (row = [0: len(revisions)]) {
-            translate([0, row * row_height * dim_linewidth()])
-            line(revision_width * dim_linewidth());
-
-            for (col = [0:2]) {
-                translate([(cols[col] + desc_x) * dim_linewidth(),
-                    ((row + 1) * row_height + desc_y) * dim_linewidth()])
-                dim_extrude() text(revisions[row][col], size=dim_fontsize(),
-                                  font=dim_font());
-            }
+            for (col = [0:2])
+                translate([(cols[col]+desc_x), ((row+1)*row_height+desc_y)])
+                    dim_extrude() text(revisions[row][col], size=dim_fontsize(),
+                                      font=dim_font());
         }
     }
 }
 
-module sample_titleblock2() {
+module sample_titleblock2()
+{
+    fs = dim_fontsize();
+    lw = dim_linewidth();
+    row_height = 3*fs;
 
-    row_height = 20;
-
-    cols = [-.5, 115, 174, 290];
-    title_width = cols[3];
+    title_width = 42*fs;
+    cols = [0, title_width*16/42, title_width*26/42, title_width];
 
     rows = [0, -row_height, -row_height * 2, -row_height * 3, -row_height * 4,
-            -row_height * 5, -row_height * 6, -row_height * 7
-    ];
+            -row_height * 5, -row_height * 6, -row_height * 7];
     title_height = rows[7];
 
     // spacing tweaks to fit into the blocks
-    desc_x = 2; // column offset for start of small text
-    desc_y = -5; // row offset for start of small text
-    det_x = 15;  // col offset for start of detail text
-    det_y = -15;  // row offset for start of detail text
+    desc_x = 0.25*fs; // column offset for start of small text
+    desc_y = -fs; // row offset for start of small text
+    det_x = 2*fs;  // col offset for start of detail text
+    det_y = -2.5*fs;  // row offset for start of detail text
     desc_size = .65; // relative size of description text
 
 
     lines = [
         // horizontal lines
-        [-.5, 0, "horz", title_width, 1],
-
-        [cols[2], rows[1], "horz", cols[3] - cols[2] - .5, 1],
-        [cols[0], rows[2], "horz", cols[1] - cols[0] - .5, 1],
-        [cols[0], rows[3], "horz", cols[3] - .5, 1],
-        [cols[0], rows[4], "horz", cols[2] - .5, 1],
-        [cols[0], rows[5], "horz", cols[3] - .5, 1],
-        [cols[0], rows[6], "horz", cols[2] - .5, 1],
-        [cols[0], rows[7], "horz", cols[2] - .5, 1],
-
-        [cols[0], rows[7], "horz", title_width, 1],
+        [cols[0]-lw/2, 0, "horz", title_width+lw, 1],
+        [cols[2], rows[1], "horz", cols[3] - cols[2], 1],
+        [cols[0], rows[2], "horz", cols[1] - cols[0], 1],
+        [cols[0], rows[3], "horz", cols[3], 1],
+        [cols[0], rows[4], "horz", cols[2], 1],
+        [cols[0], rows[5], "horz", cols[3], 1],
+        [cols[0], rows[6], "horz", cols[2], 1],
+        [cols[0], rows[7], "horz", cols[2], 1],
+        [cols[0]-lw/2, rows[7], "horz", title_width+lw, 1],
 
         // vertical lines
         [cols[0], rows[0], "vert", -rows[7], 1],
@@ -625,37 +596,35 @@ module sample_titleblock2() {
     ];
 
     descs = [
-
         // part description
-        [cols[0] + desc_x, rows[2] + desc_y, "horz", part_desc[0], desc_size],
-        [cols[0] + desc_x, rows[3] + desc_y, "horz", part_desc[1], desc_size],
-        [cols[0] + desc_x, rows[4] + desc_y, "horz", part_desc[2], desc_size],
-        [cols[0] + desc_x, rows[5] + desc_y, "horz", part_desc[3], desc_size],
+        [cols[0]+desc_x, rows[2]+desc_y, "horz", part_desc[0], desc_size],
+        [cols[0]+desc_x, rows[3]+desc_y, "horz", part_desc[1], desc_size],
+        [cols[0]+desc_x, rows[4]+desc_y, "horz", part_desc[2], desc_size],
+        [cols[0]+desc_x, rows[5]+desc_y, "horz", part_desc[3], desc_size],
 
         // documentation description
-        [cols[1] + desc_x, rows[3] + desc_y, "horz", doc_desc[0], desc_size],
-        [cols[1] + desc_x, rows[4] + desc_y, "horz", doc_desc[1], desc_size],
-        [cols[1] + desc_x, rows[5] + desc_y, "horz", doc_desc[2], desc_size],
-        [cols[1] + desc_x, rows[6] + desc_y, "horz", doc_desc[3], desc_size],
+        [cols[1]+desc_x, rows[3]+desc_y, "horz", doc_desc[0], desc_size],
+        [cols[1]+desc_x, rows[4]+desc_y, "horz", doc_desc[1], desc_size],
+        [cols[1]+desc_x, rows[5]+desc_y, "horz", doc_desc[2], desc_size],
+        [cols[1]+desc_x, rows[6]+desc_y, "horz", doc_desc[3], desc_size],
    ];
 
     details = [
-        [cols[0] + desc_x, rows[0] + det_y, "horz", part_details[0], 1.5],
-        [cols[0] + desc_x, rows[2] + det_y, "horz", part_details[1], 1],
-        [cols[0] + desc_x, rows[3] + det_y, "horz", part_details[2], 1],
-        [cols[0] + desc_x, rows[4] + det_y, "horz", part_details[3], 1],
-        [cols[0] + desc_x, rows[5] + det_y, "horz", part_details[4], 1],
+        [cols[0]+desc_x, rows[0]+det_y, "horz", part_details[0], 1.5],
+        [cols[0]+desc_x, rows[2]+det_y, "horz", part_details[1], 1],
+        [cols[0]+desc_x, rows[3]+det_y, "horz", part_details[2], 1],
+        [cols[0]+desc_x, rows[4]+det_y, "horz", part_details[3], 1],
+        [cols[0]+desc_x, rows[5]+det_y, "horz", part_details[4], 1],
 
-        [cols[1] + desc_x * 2, rows[3] + det_y, "horz", doc_details[0], 1],
-        [cols[1] + desc_x * 2, rows[4] + det_y, "horz", doc_details[1], 1],
-        [cols[1] + desc_x * 2, rows[5] + det_y, "horz", doc_details[2], 1],
-        [cols[1] + desc_x * 2, rows[6] + det_y, "horz", doc_details[3], 1],
+        [cols[1]+desc_x*2, rows[3]+det_y, "horz", doc_details[0], 1],
+        [cols[1]+desc_x*2, rows[4]+det_y, "horz", doc_details[1], 1],
+        [cols[1]+desc_x*2, rows[5]+det_y, "horz", doc_details[2], 1],
+        [cols[1]+desc_x*2, rows[6]+det_y, "horz", doc_details[3], 1],
 
         // Organization Details
-        [cols[1] + desc_x, rows[1] + det_y, "horz", org_details[0], 1.5],
-        [cols[2] + desc_x, rows[0] + det_y, "horz", org_details[1], 1.5],
-        [cols[2] + desc_x, rows[1] + det_y, "horz", org_details[2], 1],
-
+        [cols[1]+desc_x, rows[1]+det_y, "horz", org_details[0], 1.5],
+        [cols[2]+desc_x, rows[0]+det_y, "horz", org_details[1], 1.5],
+        [cols[2]+desc_x, rows[1]+det_y, "horz", org_details[2], 1],
     ];
 
     titleblock(lines, descs, details);
@@ -669,10 +638,8 @@ module sample_titleblock2() {
         ["5a", "2017-5-10", "gcl"],
     ];
 
-    translate([0, title_height*dim_linewidth()]) rotate([0, 0, 90])
+    translate([0, title_height]) rotate([0, 0, 90])
     sample_revisionblock(revisions);
-
-
 }
 
 module sample_lines()
