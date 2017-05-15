@@ -86,11 +86,12 @@
  * Variable
  * $dim_font        - Typeface for dimension labels. (default: OpenSCAD default)
  * $dim_fontsize    - Size of font in base units. Is approximately the height
- *                    of a single line of text. (default: 0.175)
- *                    By default all the drawing sizes are scaled from font
- *                    size, so if you change the value of $dim_fontsize, all
- *                    the other sizes will be adjusted accordingly.
- * $dim_linewidth   - Width of lines. (default: $dim_fontsize/7)
+ *                    of a single line of text. (default: 10pt font, or 8*pt
+ *                    because font height over baseline is smaller than the
+ *                    described font size.) If you change $dim_fontsize
+ *                    significantly, you should make a similar change to
+ *                    $dim_linesize
+ * $dim_linewidth   - Width of lines. (default: 1pt)
  * $dim_extrude_flag - (bool) If true, extrude dimension lines into 3D objects.
  * $dim_mmsize      - Size of mm in base units. OpenSCAD models normally use a
  *                    1:1 mapping between base units and mm, and there should
@@ -129,8 +130,8 @@ function dim_unitsymbol() = units[search([dim_units()], units)[0]][2];
 
 // configuration for font, font size, line size and whether to extrude into 3D
 function dim_font() = $dim_font ? $dim_font : undef;
-function dim_fontsize() = $dim_fontsize ? $dim_fontsize : 0.175;
-function dim_linewidth() = $dim_linewidth ? $dim_linewidth : dim_fontsize() / 7;
+function dim_fontsize() = $dim_fontsize ? $dim_fontsize : 10*pt*0.8;
+function dim_linewidth() = $dim_linewidth ? $dim_linewidth : 1 * pt;
 function dim_extrude_flag() = $dim_extrude ? $dim_extrude : true;
 
 // BUG: The OpenSCAD built in font (at least on the Debian packaged version) is
