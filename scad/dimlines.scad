@@ -40,7 +40,7 @@
  *      Draws the cross in the center of a circle.  There are defaults for the
  *      cross size and line width
  *
- *  dimensions(length, line_width, loc="center", label=undef)
+ *  dimensions(length, loc="center", mytext, offset, center)
  *      draws text within lines, such as <--- 3.5 --->
  *      with the use of the variable loc you can alter the placement of the text
  *      loc="center"      <--- 3.5 --->  this is the default
@@ -245,54 +245,66 @@ function text_or_length(length, mytext, prefix="") =
  * dimensions() - Draw a dimension line showing measurement between two points
  * length: length of dimension line in model units
  * loc: Location of label
- * label: string to use as label. If mytext is omitted, the value of length is
+ * mytext: string to use as label. If mytext is omitted, the value of length is
  *         converted into a string and used as a label
+ * offset: If set, offset dimension line by this value and draw leader lines
+ * center: (bool) Center dimension line across the x axis if true.
  *
  * This module draws a dimensioned line with a label. By default it draws the
  * line broken with the label in the middle. Placement of the label and
  * dimension lines can be controlled with the 'loc' argument.
  */
-module dimensions(length, loc="center", mytext=undef)
+module dimensions(length, loc=undef, mytext=undef, offset=undef, center=false)
 {
     _label = text_or_length(length, mytext);
     space = len(_label) * dim_fontsize();
+    xoff = center ? -length/2 : 0;
+    _loc = loc ? loc : (space+dim_linewidth()*10 < length ? "center" : "left");
 
-    if (loc == "center") {
-        line(length/2-space/2, left_arrow=true);
+    translate([xoff, offset ? offset : 0]) {
+        if (_loc == "center") {
+            line(length/2-space/2, left_arrow=true);
 
-        translate([length/2, 0]) dim_extrude()
-            text(_label, size=dim_fontsize(), font=dim_font(),
-                 halign="center", valign="center");
+            translate([length/2, 0]) dim_extrude()
+                text(_label, size=dim_fontsize(), font=dim_font(),
+                     halign="center", valign="center");
 
-        translate([length/2+space/2, 0])
-            line(length/2-space/2, right_arrow=true);
+            translate([length/2+space/2, 0])
+                line(length/2-space/2, right_arrow=true);
 
-    } else if (loc == "left") {
-         line(length, left_arrow=true, right_arrow=true);
+        } else if (_loc == "left") {
+             line(length, left_arrow=true, right_arrow=true);
 
-         translate([-dim_fontsize(), 0]) dim_extrude()
-             text(_label, size=dim_fontsize(), font=dim_font(),
-                  halign="right", valign="center");
+             translate([-dim_fontsize(), 0]) dim_extrude()
+                 text(_label, size=dim_fontsize(), font=dim_font(),
+                      halign="right", valign="center");
 
-    } else if (loc == "right") {
-        line(length, left_arrow=true, right_arrow=true);
+        } else if (_loc == "right") {
+            line(length, left_arrow=true, right_arrow=true);
 
-        translate([length+dim_fontsize(), 0]) dim_extrude()
-            text(_label, size=dim_fontsize(), font=dim_font(), valign="center");
+            translate([length+dim_fontsize(), 0]) dim_extrude()
+                text(_label, size=dim_fontsize(), font=dim_font(), valign="center");
 
-    } else if (loc == "outside") {
-        translate([-length/2, 0])
-            line(length/2, right_arrow=true);
+        } else if (_loc == "outside") {
+            translate([-length/2, 0])
+                line(length/2, right_arrow=true);
 
-        translate([length/2, 0]) dim_extrude()
-            text(_label, size=dim_fontsize(), font=dim_font(),
-                 halign="center", valign="center");
+            translate([length/2, 0]) dim_extrude()
+                text(_label, size=dim_fontsize(), font=dim_font(),
+                     halign="center", valign="center");
 
-        translate([length, 0])
-            line(length/2, left_arrow=true);
-    } else {
-        echo("dimensions(): error: unrecognized value for loc:", loc);
+            translate([length, 0])
+                line(length/2, left_arrow=true);
+        } else {
+            echo("dimensions(): error: unrecognized value for loc:", loc);
+        }
     }
+
+    if (offset)
+         for (x=[xoff,xoff+length])
+            translate([x,0]) rotate([0,0,offset < 0 ? -90 : 90])
+                translate([dim_linewidth()*2,0])
+                    line(abs(offset)+dim_fontsize()/2);
 }
 
 /**
