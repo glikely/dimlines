@@ -341,7 +341,7 @@ module dimensions(length, loc=undef, mytext=undef, offset=undef, center=false)
  * to 90, and left otherwise, but can be forced by using the 'direction'
  * argument.
  */
-module leader_line(radius, text=undef, angle=45, angle_length=dim_fontsize()*4,
+module leader_line(radius, text=undef, angle=45, angle_length=dim_fontsize()*5,
                    horz_line_length=dim_fontsize()*4,
                    direction=undef, do_circle=false)
 {
