@@ -138,11 +138,12 @@ function dim_mmsize() = $dim_mmsize ? $dim_mmsize : mm;
 function dim_units() = $dim_units ? $dim_units : "mm";
 function dim_unitscale() = units[search([dim_units()], units)[0]][1] / dim_mmsize();
 function dim_unitsymbol() = units[search([dim_units()], units)[0]][2];
+function dim_modelscale() = $dim_modelscale ? $dim_modelscale : 1;
 
 // configuration for font, font size, line size and whether to extrude into 3D
 function dim_font() = $dim_font ? $dim_font : undef;
-function dim_fontsize() = $dim_fontsize ? $dim_fontsize : 10*pt*0.8;
-function dim_linewidth() = $dim_linewidth ? $dim_linewidth : 1 * pt;
+function dim_fontsize() = ($dim_fontsize ? $dim_fontsize : 10*pt*0.8) / dim_modelscale();
+function dim_linewidth() = ($dim_linewidth ? $dim_linewidth : 1 * pt) / dim_modelscale();
 function dim_extrude_flag() = $dim_extrude ? $dim_extrude : true;
 
 // configuration for page size and border
