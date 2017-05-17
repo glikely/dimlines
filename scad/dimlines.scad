@@ -122,6 +122,17 @@ units = [
     ["points", 1/pt, " pt"]
 ];
 
+// Page sizes
+pagesizes = [
+    ["A0", [1189,841]],
+    ["A1", [841,594]],
+    ["A2", [594,420]],
+    ["A3", [420,297]],
+    ["A4", [297,210]],
+    ["letter", [279.4,215.9]],
+    ["11x17", [431.8, 279.4]],
+];
+
 // configuration for units of measurement
 function dim_mmsize() = $dim_mmsize ? $dim_mmsize : mm;
 function dim_units() = $dim_units ? $dim_units : "mm";
@@ -133,6 +144,11 @@ function dim_font() = $dim_font ? $dim_font : undef;
 function dim_fontsize() = $dim_fontsize ? $dim_fontsize : 10*pt*0.8;
 function dim_linewidth() = $dim_linewidth ? $dim_linewidth : 1 * pt;
 function dim_extrude_flag() = $dim_extrude ? $dim_extrude : true;
+
+// configuration for page size and border
+function dim_pagename() = $dim_pagename ? $dim_pagename : "A4";
+function dim_pagesize() = pagesizes[search([dim_pagename()], pagesizes)[0]][1];
+function dim_pagemargin() = $dim_pagemargin ? $dim_pagemargin : 10;
 
 // BUG: The OpenSCAD built in font (at least on the Debian packaged version) is
 // missing some symbols. ex. the diameter '⌀' glyph. Uncomment the following if
@@ -402,6 +418,11 @@ module titleblock(lines, descs, details) {
         translate([line[0], line[1]])
             rotate([0, 0, line[2]=="vert" ? 90 : 0]) dim_extrude()
                 text(line[3], size=dim_fontsize()*line[4], font=dim_font());
+}
+
+module dim_pageborder(ps=dim_pagesize(), pm=dim_pagemargin())
+{
+    translate([pm,pm]) dim_outline(weight=2) square([ps.x-pm*2,ps.y-pm*2]);
 }
 
 /* Scale examples to match size of dimension elements */
