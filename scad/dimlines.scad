@@ -33,7 +33,7 @@
  *
  * the following functions or modules are available.
  *
- *  line(length, width, left_arrow=false, right_arrow=false)
+ *  line(length, weight, left_arrow=false, right_arrow=false)
  *      Can draw a line with the options of including an arrow at either end
  *
  *  circle_center(radius, size, line_width)
@@ -167,7 +167,15 @@ module arrow(arr_points, arr_length)
         paths = [[0, 1, 2, 3]], convexity = 2);
 }
 
-module line(length, left_arrow=false, right_arrow=false)
+/**
+ * line() - Draw a horizontal line with optional arrows
+ * length: length of the line in OpenSCAD units
+ * weight: Thickness of the line relative to dim_linewidth(). With default
+ *         values, this will draw a 1pt thickness line.
+ * left_arrow: (bool) Draw an arrowhead at the beginning of the line if true.
+ * right_arrow: (bool) Draw an arrowhead at the end of the line if true.
+ */
+module line(length, weight=1, left_arrow=false, right_arrow=false)
 {
     /* This module draws a line that can have an arrow on either end.  Because
      * the intended use is to be viewed strictly from above, the height of the
@@ -177,7 +185,7 @@ module line(length, left_arrow=false, right_arrow=false)
      * arrow. Your sense of asthetics may lead you to choose different
      * numbers.
      */
-    width = dim_linewidth();
+    width = dim_linewidth()*weight;
     arr_points = width * 4;
     arr_length = arr_points * .6;
     line_length = length - arr_length * ((left_arrow ? 1 : 0) + (right_arrow ? 1 : 0));
@@ -368,9 +376,9 @@ module titleblock(lines, descs, details) {
 
     for (line = lines) translate([line[0], line[1]]) {
         if (line[2] == "vert") rotate([0, 0, -90])
-            line(line[3], $dim_linewidth=dim_linewidth() * line[4]);
+            line(line[3], weight=line[4]);
         else if (line[2] == "horz")
-            line(line[3], $dim_linewidth=dim_linewidth() * line[4]);
+            line(line[3], weight=line[4]);
     }
 
     for (line = descs)
