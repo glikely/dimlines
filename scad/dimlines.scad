@@ -379,30 +379,32 @@ module leader_line(radius, text=undef, angle=45, angle_length=dim_fontsize()*5,
     }
 }
 
-module titleblock(lines, descs, details) {
-    /* titleblock
-     *
-     * This module accepts the following arrays with formats:
-     *
-     * holds the description of the lines. width is a factor that
-     * expands the line width beyond dim_linewidth()
-     *
-     * lines     = [[startx, starty, horz/vert, length, width],
-     *              [startx, starty, horz/vert, length, width]]
-     *
-     * holds the descriptions of the title blocks. these are meant to sit in
-     * the upper left corner. size, like width above, is a factor that
-     * increases/decreases the size of the font
-     *
-     * descs    = [[startx, starty, horz/vert, text, size],
-     *             [startx, starty, horz/vert, text, size]]
-     *
-     * holds the detail associated with the part being documented
-     *
-     * details    = [[startx, starty, horz/vert, text, size],
-     *               [startx, starty, horz/vert, text, size]]
-    */
-
+/**
+ * titleblock() - Draw a tabular title block
+ * lines: array of lines to draw as table borders
+ * descs: array of table cell description labels
+ * details: array of table contents text
+ *
+ * 'lines' holds the description of the lines. 'width' is the line width as a
+ * multipler to dim_linewidth().
+ *
+ * lines     = [[startx, starty, horz/vert, length, width],
+ *              [startx, starty, horz/vert, length, width]]
+ *
+ * 'descs' holds the descriptions of the title blocks. these are meant to sit in
+ * the upper left corner. size, like width above, is a factor that
+ * increases/decreases the size of the font
+ *
+ * descs    = [[startx, starty, horz/vert, text, size],
+ *             [startx, starty, horz/vert, text, size]]
+ *
+ * holds the detail associated with the part being documented
+ *
+ * details    = [[startx, starty, horz/vert, text, size],
+ *               [startx, starty, horz/vert, text, size]]
+ */
+module titleblock(lines, descs, details)
+{
     for (line = lines) translate([line[0], line[1]]) {
         if (line[2] == "vert") rotate([0, 0, -90])
             line(line[3], weight=line[4]);
