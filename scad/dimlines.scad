@@ -689,14 +689,21 @@ module sample_titleblock2()
 
 module sample_lines()
 {
+    length = 2.5 * DIM_SAMPLE_SCALE;
+
     // sample lines
-    line(length=2 * DIM_SAMPLE_SCALE, left_arrow=false, right_arrow=false);
-    translate([0, -0.25 * DIM_SAMPLE_SCALE])
-        line(length=2 * DIM_SAMPLE_SCALE, left_arrow=true, right_arrow=false);
-    translate([0, -0.5 * DIM_SAMPLE_SCALE])
-        line(length=2 * DIM_SAMPLE_SCALE, left_arrow=false, right_arrow=true);
-    translate([0, -0.75 * DIM_SAMPLE_SCALE])
-        line(length=2 * DIM_SAMPLE_SCALE, left_arrow=true, right_arrow=true);
+    translate([0,-dim_fontsize()*2]) dim_extrude()
+        text("Sample Lines", halign="center", valign="bottom",
+             font=dim_font(), size=dim_fontsize());
+
+    translate([-length/2,0])
+        line(length, left_arrow=false, right_arrow=false);
+    translate([-length/2, 0.25 * DIM_SAMPLE_SCALE])
+        line(length, left_arrow=true, right_arrow=false);
+    translate([-length/2, 0.5 * DIM_SAMPLE_SCALE])
+        line(length, left_arrow=false, right_arrow=true);
+    translate([-length/2, 0.75 * DIM_SAMPLE_SCALE])
+        line(length, left_arrow=true, right_arrow=true);
 }
 
 /**
@@ -710,20 +717,23 @@ module sample_dimensions(with_text=false)
     loc = ["center", "left", "right", "outside"];
     length = 2.5 * DIM_SAMPLE_SCALE;
 
+    translate([0, -dim_fontsize()*2]) dim_extrude()
+        text(with_text ? "Labelled Dimensions" : "Dimensions",
+             halign="center", valign="bottom", font=dim_font(), size=dim_fontsize());
+
     // The following two lines are vertical lines that bracket the dimensions
     // left arrow
-    translate([0, -1.75 * DIM_SAMPLE_SCALE]) rotate([0, 0, 90])
+    translate([-length/2,0]) rotate([0, 0, 90])
         line(length);
 
     // right arrow
-    translate([length, -1.75 * DIM_SAMPLE_SCALE]) rotate([0, 0, 90])
+    translate([length/2,0]) rotate([0, 0, 90])
         line(length);
 
     //  The following runs through all the dimension types
-    for (i = [0:len(loc)-1]) {
-        translate([0, -.5 * i * DIM_SAMPLE_SCALE])
+    for (i = [0:len(loc)-1])
+        translate([-length/2, 0.5 * (len(loc)-i) * DIM_SAMPLE_SCALE])
             dimensions(length=length, loc=loc[i], mytext=with_text ? loc[i] : undef);
-    }
 }
 
 /**
@@ -734,15 +744,19 @@ module sample_units(change_mmsize=false)
     height = (len(units)+1) * 0.5 * DIM_SAMPLE_SCALE;
     length = 2.5 * DIM_SAMPLE_SCALE;
 
+    translate([0, -dim_fontsize()*2]) dim_extrude()
+        text(change_mmsize ? "Changing $dim_mmsize" : "Changing $dim_units",
+             halign="center", valign="bottom", font=dim_font(), size=dim_fontsize());
+
     // The following two lines are vertical lines that bracket the dimensions
-    rotate([0, 0, -90]) line(height);
-    translate([length, 0]) rotate([0, 0, -90]) line(height);
+    translate([-length/2, 0]) rotate([0, 0, 90]) line(height);
+    translate([length/2, 0]) rotate([0, 0, 90]) line(height);
 
     // The following runs through all the dimension units
     for (i = [0:len(units)-1]) {
         $dim_units = units[i][0];
         $dim_mmsize = change_mmsize ? units[i][1] : 1;
-        translate([0, -0.5 * (i+1) * DIM_SAMPLE_SCALE])
+        translate([-length/2, 0.5 * (len(units)-i) * DIM_SAMPLE_SCALE])
             dimensions(length);
     }
 }
@@ -752,6 +766,11 @@ module sample_units(change_mmsize=false)
  */
 module sample_leaderlines(radius=0.25*DIM_SAMPLE_SCALE)
 {
+    // Label the sample
+    translate([0, -dim_fontsize()*16]) dim_extrude()
+        text("leader lines", halign="center", valign="bottom",
+             font=dim_font(), size=dim_fontsize());
+
     // Simple call to leader_line() shows circle diameter
     leader_line(radius);
 
@@ -779,6 +798,11 @@ module sample_leaderlines(radius=0.25*DIM_SAMPLE_SCALE)
  */
 module sample_leaderlines_lr(radius=0.5 * DIM_SAMPLE_SCALE)
 {
+    // Label the sample
+    translate([0, -dim_fontsize()*16]) dim_extrude()
+        text("leader lines left/right", halign="center", valign="bottom",
+             font=dim_font(), size=dim_fontsize());
+
     dim_outline() circle(radius);
 
     // Simple call to leader_line() shows circle diameter
@@ -808,14 +832,19 @@ module sample_leaderlines_lr(radius=0.5 * DIM_SAMPLE_SCALE)
 
 }
 
-module sample_circlecenter() {
-
+module sample_circlecenter()
+{
     radius = .25 * DIM_SAMPLE_SCALE;
-    difference() {
-        cube([DIM_SAMPLE_SCALE, DIM_SAMPLE_SCALE, DIM_SAMPLE_SCALE], center=true);
-        cylinder(h=1.1 * DIM_SAMPLE_SCALE, r=radius, center=true, $fn=100);
+
+    translate([0, -DIM_SAMPLE_SCALE/2-dim_fontsize()*2]) dim_extrude()
+        text("circle_center()",
+             halign="center", valign="bottom", font=dim_font(), size=dim_fontsize());
+
+    dim_outline() difference() {
+        square(DIM_SAMPLE_SCALE, center=true);
+        circle(r=radius, center=true, $fn=100);
     }
-    color("Black") translate([0, 0, .51 * DIM_SAMPLE_SCALE])
+    color("Black")
         circle_center(radius);
 }
 
@@ -823,20 +852,27 @@ module sample_circlecenter() {
 module all_samples()
 {
     // Explicitly set the dimensioning parameters
-    $dim_height=0.01;
+    $dim_pagename="A3";
 
-    sample_lines();
+    ps = dim_pagesize();
+    bw = dim_pagemargin();
 
-    translate([-5.5 * DIM_SAMPLE_SCALE, 0]) sample_dimensions();
-    translate([-11 * DIM_SAMPLE_SCALE, 0]) sample_dimensions(true);
-    translate([-5.5 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE]) sample_units();
-    translate([-11 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE]) sample_units(true);
+    translate(-ps/2) {
+        dim_pageborder();
+        translate([ps.x*3/16, ps.y*6/16]) sample_lines();
 
-    translate([4 * DIM_SAMPLE_SCALE, 0]) sample_circlecenter();
-    translate([-2 * DIM_SAMPLE_SCALE, 3 * DIM_SAMPLE_SCALE]) sample_leaderlines();
-    translate([-9 * DIM_SAMPLE_SCALE, 3 * DIM_SAMPLE_SCALE]) sample_leaderlines_lr();
-    translate([3 * DIM_SAMPLE_SCALE, 4 * DIM_SAMPLE_SCALE]) sample_titleblock1();
-    translate([3 * DIM_SAMPLE_SCALE, -2 * DIM_SAMPLE_SCALE]) sample_titleblock2();
+        translate([ps.x*3/16, ps.y*2/16]) sample_dimensions();
+        translate([ps.x*7/16, ps.y*2/16]) sample_dimensions(true);
+        translate([ps.x*11/16, ps.y*10/16]) sample_units();
+        translate([ps.x*14/16, ps.y*10/16]) sample_units(true);
+
+        translate([ps.x*12/16, ps.y*6/16]) sample_circlecenter();
+        translate([ps.x*3/16, ps.y*11/16]) sample_leaderlines();
+        translate([ps.x*7/16, ps.y*11/16]) sample_leaderlines_lr();
+
+        translate([bw, ps.y-bw]) sample_titleblock1();
+        translate([ps.x-bw-dim_fontsize()*42, bw+dim_fontsize()*3*7]) sample_titleblock2();
+    }
 }
 
 all_samples();
