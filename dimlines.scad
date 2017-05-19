@@ -171,6 +171,21 @@ module dim_extrude()
         children();
 }
 
+/**
+ * dim_text() - Simple text() wrapper to extrude and use dimline defaults
+ *
+ * Uses exact same arguments as the built in text() module, except the size argument
+ * is replaced with weight. Weight scales the text size based on dim_fontsize().
+ */
+module dim_text(text, weight=1, font=dim_font(), halign="left", valign="baseline",
+                spacing=1, direction="ltr", language="en", script="latin")
+{
+    dim_extrude()
+        text(text, size=dim_fontsize()*weight, font=font, halign=halign,
+             valign=valign, spacing=spacing, direction=direction,
+             language=language, script=script, $fn=25);
+}
+
 module dim_arrow(arr_points, arr_length)
 {
     // arrow points to the left
@@ -288,9 +303,8 @@ module dim_dimension(length, text=undef, weight=1, loc=undef, offset=undef, cent
         if (_loc == "center") {
             dim_line(length/2-space/2, weight, left="arrow");
 
-            translate([length/2, 0]) dim_extrude()
-                text(_label, size=dim_fontsize(), font=dim_font(),
-                     halign="center", valign="center");
+            translate([length/2, 0])
+                dim_text(_label, halign="center", valign="center");
 
             translate([length/2+space/2, 0])
                 dim_line(length/2-space/2, weight, right="arrow");
@@ -298,23 +312,21 @@ module dim_dimension(length, text=undef, weight=1, loc=undef, offset=undef, cent
         } else if (_loc == "left") {
              dim_line(length, weight, left="arrow", right="arrow");
 
-             translate([-dim_fontsize(), 0]) dim_extrude()
-                 text(_label, size=dim_fontsize(), font=dim_font(),
-                      halign="right", valign="center");
+             translate([-dim_fontsize(), 0])
+                 dim_text(_label, halign="right", valign="center");
 
         } else if (_loc == "right") {
             dim_line(length, weight, left="arrow", right="arrow");
 
-            translate([length+dim_fontsize(), 0]) dim_extrude()
-                text(_label, size=dim_fontsize(), font=dim_font(), valign="center");
+            translate([length+dim_fontsize(), 0])
+                dim_text(_label, valign="center");
 
         } else if (_loc == "outside") {
             translate([-length/2, 0])
                 dim_line(length/2, weight, right="arrow");
 
-            translate([length/2, 0]) dim_extrude()
-                text(_label, size=dim_fontsize(), font=dim_font(),
-                     halign="center", valign="center");
+            translate([length/2, 0])
+                dim_text(_label, halign="center", valign="center");
 
             translate([length, 0])
                 dim_line(length/2, weight, left="arrow");
@@ -375,9 +387,7 @@ module dim_leaderline(radius=0, text=undef, angle=45, dlength=dim_fontsize()*5,
             // Draw label. Centered text is used to make do_circle test simpler.
             text_pos = hlength + space + text_length/2;
             translate([text_pos * (dir_left ? -1 : 1), 0]) {
-                dim_extrude()
-                    text(label, size=dim_fontsize(), font=dim_font(),
-                         valign="center", halign="center");
+                dim_text(label, valign="center", halign="center");
 
                 if (do_circle)
                     dim_outline() circle(text_length/2 + space);
@@ -421,13 +431,13 @@ module dim_titleblock(lines, descs, details)
 
     for (line = descs)
         translate([line[0], line[1]])
-            rotate([0, 0, line[2]=="vert" ? 90 : 0]) dim_extrude()
-                text(line[3], size=dim_fontsize()*line[4], font=dim_font());
+            rotate([0, 0, line[2]=="vert" ? 90 : 0])
+                dim_text(line[3], weight=line[4]);
 
     for (line = details)
         translate([line[0], line[1]])
-            rotate([0, 0, line[2]=="vert" ? 90 : 0]) dim_extrude()
-                text(line[3], size=dim_fontsize()*line[4], font=dim_font());
+            rotate([0, 0, line[2]=="vert" ? 90 : 0])
+                dim_text(line[3], weight=line[4]);
 }
 
 module dim_pageborder(ps=dim_pagesize(), pm=dim_pagemargin())
@@ -568,8 +578,7 @@ module sample_revisionblock(revisions)
 
             for (col = [0:2])
                 translate([(cols[col]+desc_x), ((row+1)*row_height+desc_y)])
-                    dim_extrude() text(revisions[row][col], size=dim_fontsize(),
-                                      font=dim_font());
+                    dim_text(revisions[row][col]);
         }
     }
 }
@@ -696,8 +705,7 @@ module sample_line(length, weight=1, left="flat", right="flat")
     label = str("weigh=",weight," left=\"", left, "\" right=\"", right, "\"");
     translate([-length/2,0]) dim_line(length, weight, left=left, right=right);
     translate([0,dim_linewidth()*weight/2])
-        dim_extrude() text(label, halign="center", valign="bottom",
-                           font=dim_font(), size=dim_fontsize()/2);
+        dim_text(label, weight=0.5, halign="center", valign="bottom");
 }
 
 module sample_lines()
@@ -706,9 +714,8 @@ module sample_lines()
     length = 4 * DIM_SAMPLE_SCALE;
 
     // sample lines
-    translate([0,-dim_fontsize()*2]) dim_extrude()
-        text("Sample Lines", halign="center", valign="bottom",
-             font=dim_font(), size=dim_fontsize());
+    translate([0,-dim_fontsize()*2])
+        dim_text("Sample Lines", halign="center", valign="bottom");
 
     translate([0,0]) sample_line(length);
     translate([0, 1*dim_fontsize()*2])
@@ -734,9 +741,9 @@ module sample_dimensions(with_text=false)
     loc = ["center", "left", "right", "outside"];
     length = 2.5 * DIM_SAMPLE_SCALE;
 
-    translate([0, -dim_fontsize()*2]) dim_extrude()
-        text(with_text ? "Labelled Dimensions" : "Dimensions",
-             halign="center", valign="bottom", font=dim_font(), size=dim_fontsize());
+    translate([0, -dim_fontsize()*2])
+        dim_text(with_text ? "Labelled Dimensions" : "Dimensions",
+             halign="center", valign="bottom");
 
     // The following two lines are vertical lines that bracket the dimensions
     // left arrow
@@ -761,9 +768,9 @@ module sample_units(change_mmsize=false)
     height = (len(units)+1) * 0.5 * DIM_SAMPLE_SCALE;
     length = 2.5 * DIM_SAMPLE_SCALE;
 
-    translate([0, -dim_fontsize()*2]) dim_extrude()
-        text(change_mmsize ? "Changing $dim_mmsize" : "Changing $dim_units",
-             halign="center", valign="bottom", font=dim_font(), size=dim_fontsize());
+    translate([0, -dim_fontsize()*2])
+        dim_text(change_mmsize ? "Changing $dim_mmsize" : "Changing $dim_units",
+                 halign="center", valign="bottom");
 
     // The following two lines are vertical lines that bracket the dimensions
     translate([-length/2, 0]) rotate([0, 0, 90]) dim_line(height);
@@ -784,9 +791,8 @@ module sample_units(change_mmsize=false)
 module sample_leaderlines(radius=0.25*DIM_SAMPLE_SCALE)
 {
     // Label the sample
-    translate([0, -dim_fontsize()*16]) dim_extrude()
-        text("leader lines", halign="center", valign="bottom",
-             font=dim_font(), size=dim_fontsize());
+    translate([0, -dim_fontsize()*16])
+        dim_text("leader lines", halign="center", valign="bottom");
 
     // Simple call to dim_leaderline() shows circle diameter
     dim_leaderline(radius);
@@ -816,9 +822,8 @@ module sample_leaderlines(radius=0.25*DIM_SAMPLE_SCALE)
 module sample_leaderlines_lr(radius=0.5 * DIM_SAMPLE_SCALE)
 {
     // Label the sample
-    translate([0, -dim_fontsize()*16]) dim_extrude()
-        text("leader lines left/right", halign="center", valign="bottom",
-             font=dim_font(), size=dim_fontsize());
+    translate([0, -dim_fontsize()*16])
+        dim_text("leader lines left/right", halign="center", valign="bottom");
 
     dim_outline() circle(radius);
 
@@ -853,9 +858,8 @@ module sample_circlecenter()
 {
     radius = .25 * DIM_SAMPLE_SCALE;
 
-    translate([0, -DIM_SAMPLE_SCALE/2-dim_fontsize()*2]) dim_extrude()
-        text("dim_circlecenter()",
-             halign="center", valign="bottom", font=dim_font(), size=dim_fontsize());
+    translate([0, -DIM_SAMPLE_SCALE/2-dim_fontsize()*2])
+        dim_text("dim_circlecenter()", halign="center", valign="bottom");
 
     dim_outline() difference() {
         square(DIM_SAMPLE_SCALE, center=true);
