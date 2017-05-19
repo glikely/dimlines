@@ -12,7 +12,7 @@
  * 'myscale = 1/100', and '$dim_units="m"', and see what happens.
  */
 
-use <../scad/dimlines.scad>
+use <../dimlines.scad>
 use <widget.scad>
 
 $dim_pagename="letter";

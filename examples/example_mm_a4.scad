@@ -9,7 +9,7 @@
  * and plotted on A4 sized paper.
  */
 
-use <../scad/dimlines.scad>
+use <../dimlines.scad>
 use <widget.scad>
 
 pagesize = dim_pagesize();

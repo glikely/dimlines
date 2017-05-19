@@ -12,7 +12,7 @@
  * the top, front and right projections.
  */
 
-use <../scad/dimlines.scad>
+use <../dimlines.scad>
 
 default_size = [75,25,30];
 
