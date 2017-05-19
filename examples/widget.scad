@@ -49,18 +49,18 @@ module widget(size=default_size, action="add", flange=true)
         dim_outline(weight=2) projection() widget(size);
         dim_outline() projection(cut=true) translate([0,0,-size.z/2-0.01]) widget(size);
         translate([size.x/2,-size.y/2]) rotate([0,0,90]) {
-            dimensions(size.y/2, offset=-dim_fontsize()*4);
-            dimensions(size.y, offset=-dim_fontsize()*7);
+            dim_dimension(size.y/2, offset=-dim_fontsize()*4);
+            dim_dimension(size.y, offset=-dim_fontsize()*7);
         }
 
         translate([-size.x/2,-size.y/2])
-            dimensions(size.x/2-hole_offset, offset=-dim_fontsize()*3);
+            dim_dimension(size.x/2-hole_offset, offset=-dim_fontsize()*3);
         translate([hole_offset,-size.y/2])
-            dimensions(size.x/2-hole_offset, offset=-dim_fontsize()*3);
+            dim_dimension(size.x/2-hole_offset, offset=-dim_fontsize()*3);
 
         for (x=[hole_offset,-hole_offset]) translate([x,0]) {
-            circle_center(vert_hole_radius);
-            leader_line(vert_hole_radius, angle=75);
+            dim_circlecenter(vert_hole_radius);
+            dim_leaderline(vert_hole_radius, angle=75);
         }
 
     } else if (action == "dim:front") rotate([90,0,0]) {
@@ -69,17 +69,17 @@ module widget(size=default_size, action="add", flange=true)
         dim_outline() projection(cut=true) translate([0,0,-size.y/2-0.01])
             rotate([-90,0,0]) widget(size);
         translate([-size.x/2, 0])
-            dimensions(size.x/2, offset=-dim_fontsize()*4);
-        dimensions(size.x, offset=-dim_fontsize()*7, center=true);
+            dim_dimension(size.x/2, offset=-dim_fontsize()*4);
+        dim_dimension(size.x, offset=-dim_fontsize()*7, center=true);
         translate([size.x/2,0]) rotate([0,0,90]) {
-            dimensions(size.z/2, offset=-dim_fontsize()*4);
-            dimensions(size.z, offset=-dim_fontsize()*7);
+            dim_dimension(size.z/2, offset=-dim_fontsize()*4);
+            dim_dimension(size.z, offset=-dim_fontsize()*7);
         }
         translate([0,size.z/2]) {
-            leader_line(horiz_hole_radius, angle=150);
-            leader_line(size.z*0.4, angle=135);
-            leader_line(size.z/2, angle=120);
-            circle_center(horiz_hole_radius);
+            dim_leaderline(horiz_hole_radius, angle=150);
+            dim_leaderline(size.z*0.4, angle=135);
+            dim_leaderline(size.z/2, angle=120);
+            dim_circlecenter(horiz_hole_radius);
         }
 
     } else if (action == "dim:right") rotate([0,90,0]) {
@@ -89,7 +89,7 @@ module widget(size=default_size, action="add", flange=true)
         dim_outline() projection(cut=true) translate([0,0,-size.z/2+0.01])
             rotate([0,-90,0]) widget(size);
         translate([0, size.y/2]) rotate([0,0,90])
-            dimensions(size.y*0.05, offset=-dim_fontsize()*4);
+            dim_dimension(size.y*0.05, offset=-dim_fontsize()*4);
     }
 }
 

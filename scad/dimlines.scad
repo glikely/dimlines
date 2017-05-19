@@ -33,16 +33,15 @@
  *
  * the following functions or modules are available.
  *
- *  line(length, weight, left_arrow=false, right_arrow=false)
+ *  dim_line(length, weight, left_arrow=false, right_arrow=false)
  *      Can draw a line with the options of including an arrow at either end
  *
- *  circle_center(radius, size, line_width)
- *      Draws the cross in the center of a circle.  There are defaults for the
- *      cross size and line width
+ *  dim_circlecenter(radius, weight, size)
+ *      Draws the cross in the center of a circle.
  *
- *  dimensions(length, loc="center", mytext, offset, center)
+ *  dim_dimension(length, text, weight, loc, offset, center)
  *      draws text within lines, such as <--- 3.5 --->
- *      with the use of the variable loc you can alter the placement of the text
+ *      with the use of the variable pos you can alter the placement of the text
  *      loc="center"      <--- 3.5 --->  this is the default
  *      loc="left"        3.5 <---->
  *      loc="right"       <----> 3.5
@@ -51,22 +50,21 @@
  *      Can also pass in text such as a variable name in place of a
  *      numeric dimension.
  *
- *  leader_line(angle, radius, angle_length, horz_line_length,
- *              direction=undef, line_width, text)
+ *  dim_leaderline(radius, text, angle, dlength, hlength,
+ *                 direction=undef, weight, do_circle)
  *
- *      for use in pointing to the edge of a circle and showing text
+ *      Pointer to the edge of a circle and showing text
  *
  *      usage of the leader line:
- *          translate to the center of the circle
+ *          translate to the center of the circle and call dim_leaderline().
+ *
  *      Typically leader lines have a bend in them.  The angle variable is used
  *      to specify the angle from which the line will point to the center of the
- *      circle.  The radius specifies the location of the arrow. The
- *      angle_length is distance that the leader line takes until meeting the
- *      horizontal line. Once the angled line meets the horizontal line, that
- *      line will either extend to the right or left.  direction and therefore
- *      be either "right" or "left".  line_width typically would be whatever
- *      constant you have selected for all your dimensioned lines. Finally, the
- *      text will be the value that you wish to show, such as R 0.500.
+ *      circle.  The radius specifies the location of the arrow. 'dlength' and
+ *      'hlength' are the lengths of the diagonal and horizontal portions of the
+ *      leader line respectively. The horizontal line will extend to the left or
+ *      right depending on the angle, but a specific direction can be forced by
+ *      setting direction to "right" or "left".
  *
  *
  * Created by Don Smiley
@@ -173,7 +171,7 @@ module dim_extrude()
         children();
 }
 
-module arrow(arr_points, arr_length)
+module dim_arrow(arr_points, arr_length)
 {
     // arrow points to the left
     dim_extrude() polygon(
@@ -185,14 +183,14 @@ module arrow(arr_points, arr_length)
 }
 
 /**
- * line() - Draw a horizontal line with optional arrows
+ * dim_line() - Draw a horizontal line with optional arrows
  * length: length of the line in OpenSCAD units
  * weight: Thickness of the line relative to dim_linewidth(). With default
  *         values, this will draw a 1pt thickness line.
  * left_arrow: (bool) Draw an arrowhead at the beginning of the line if true.
  * right_arrow: (bool) Draw an arrowhead at the end of the line if true.
  */
-module line(length, weight=1, left_arrow=false, right_arrow=false)
+module dim_line(length, weight=1, left_arrow=false, right_arrow=false)
 {
     /* This module draws a line that can have an arrow on either end.  Because
      * the intended use is to be viewed strictly from above, the height of the
@@ -212,12 +210,12 @@ module line(length, weight=1, left_arrow=false, right_arrow=false)
             dim_extrude() square([line_length, width], center=false);
 
         if (left_arrow)
-            arrow(arr_points, arr_length);
+            dim_arrow(arr_points, arr_length);
 
         if (right_arrow) {
             translate([length, 0])
             rotate([0, 0, 180])
-            arrow(arr_points, arr_length);
+            dim_arrow(arr_points, arr_length);
         }
     }
 }
@@ -241,77 +239,81 @@ module dim_outline(weight=1) {
 }
 
 /**
- * circle_center() - Draw drill center markings
+ * dim_circlecenter() - Draw drill center markings
  * radius: radius of circle to be marked
+ * weight: Thickness of the line relative to dim_linewidth(). With default
+ *         values, this will draw a 1pt thickness line.
  * size: length of crosshair lines
  */
-module circle_center(radius, size=dim_linewidth()*6)
+module dim_circlecenter(radius, weight=1, size=dim_linewidth()*6)
 {
     // Outside edge markers
     for (i=[0,90,180,270])
-        rotate([0,0,i]) translate([radius-size/2, 0]) line(size);
+        rotate([0,0,i]) translate([radius-size/2, 0]) dim_line(size, weight);
     // Hole center crosshairs
     for (i=[0,90])
-        rotate([0,0,i]) translate([-size/2, 0]) line(size);
+        rotate([0,0,i]) translate([-size/2, 0]) dim_line(size, weight);
 }
 
-function text_or_length(length, mytext, prefix="") =
-    mytext ? mytext : str(prefix, length * dim_unitscale(), dim_unitsymbol());
+function text_or_length(length, text, prefix="") =
+    text ? text : str(prefix, length * dim_unitscale(), dim_unitsymbol());
 
 /**
- * dimensions() - Draw a dimension line showing measurement between two points
+ * dim_dimension() - Draw a dimension line showing measurement between two points
  * length: length of dimension line in model units
- * loc: Location of label
- * mytext: string to use as label. If mytext is omitted, the value of length is
- *         converted into a string and used as a label
- * offset: If set, offset dimension line by this value and draw leader lines
+ * text: string to use as label. If text is omitted, the value of length is
+ *       converted into a string and used as a label
+ * weight: Thickness of the line relative to dim_linewidth(). With default
+ *         values, this will draw a 1pt thickness line.
+ * loc: Position of label
+ * offset: If set, offset dimension line by this value and draw extension lines
  * center: (bool) Center dimension line across the x axis if true.
  *
  * This module draws a dimensioned line with a label. By default it draws the
  * line broken with the label in the middle. Placement of the label and
  * dimension lines can be controlled with the 'loc' argument.
  */
-module dimensions(length, loc=undef, mytext=undef, offset=undef, center=false)
+module dim_dimension(length, text=undef, weight=1, loc=undef, offset=undef, center=false)
 {
-    _label = text_or_length(length, mytext);
+    _label = text_or_length(length, text);
     space = len(_label) * dim_fontsize();
     xoff = center ? -length/2 : 0;
     _loc = loc ? loc : (space+dim_linewidth()*10 < length ? "center" : "left");
 
     translate([xoff, offset ? offset : 0]) {
         if (_loc == "center") {
-            line(length/2-space/2, left_arrow=true);
+            dim_line(length/2-space/2, weight, left_arrow=true);
 
             translate([length/2, 0]) dim_extrude()
                 text(_label, size=dim_fontsize(), font=dim_font(),
                      halign="center", valign="center");
 
             translate([length/2+space/2, 0])
-                line(length/2-space/2, right_arrow=true);
+                dim_line(length/2-space/2, weight, right_arrow=true);
 
         } else if (_loc == "left") {
-             line(length, left_arrow=true, right_arrow=true);
+             dim_line(length, weight, left_arrow=true, right_arrow=true);
 
              translate([-dim_fontsize(), 0]) dim_extrude()
                  text(_label, size=dim_fontsize(), font=dim_font(),
                       halign="right", valign="center");
 
         } else if (_loc == "right") {
-            line(length, left_arrow=true, right_arrow=true);
+            dim_line(length, weight, left_arrow=true, right_arrow=true);
 
             translate([length+dim_fontsize(), 0]) dim_extrude()
                 text(_label, size=dim_fontsize(), font=dim_font(), valign="center");
 
         } else if (_loc == "outside") {
             translate([-length/2, 0])
-                line(length/2, right_arrow=true);
+                dim_line(length/2, weight, right_arrow=true);
 
             translate([length/2, 0]) dim_extrude()
                 text(_label, size=dim_fontsize(), font=dim_font(),
                      halign="center", valign="center");
 
             translate([length, 0])
-                line(length/2, left_arrow=true);
+                dim_line(length/2, weight, left_arrow=true);
         } else {
             echo("dimensions(): error: unrecognized value for loc:", loc);
         }
@@ -321,16 +323,17 @@ module dimensions(length, loc=undef, mytext=undef, offset=undef, center=false)
          for (x=[xoff,xoff+length])
             translate([x,0]) rotate([0,0,offset < 0 ? -90 : 90])
                 translate([dim_linewidth()*2,0])
-                    line(abs(offset)+dim_fontsize()/2);
+                    dim_line(abs(offset)+dim_fontsize()/2, weight);
 }
 
 /**
- * leader_line() - Create a labelled line pointing to a circle edge
- * radius: Radius of circle being pointed to
- * text: text label to place at end of leader line. If omitted, diameter is shown instead
+ * dim_leaderline() - Create a labelled line pointing to a circle edge
+ * radius: Radius of circle/arc being pointed to
+ * text: text label to place at end of leader line. If omitted, diameter is
+ *       shown instead
  * angle: angle to draw arrow portion of leader line
- * angle_length: length of arrow line
- * horz_line_length: length of horizontal portion of leader line
+ * dlength: length of diagonal portion of leader line
+ * hlength: length of horizontal portion of leader line
  * direction: If specified, force direction of horizontal line.  Valid values
  *            are: "left" or "right"
  * do_circle: if true draw a circle around the text label. Useful for callouts.
@@ -341,32 +344,32 @@ module dimensions(length, loc=undef, mytext=undef, offset=undef, center=false)
  * to 90, and left otherwise, but can be forced by using the 'direction'
  * argument.
  */
-module leader_line(radius, text=undef, angle=45, angle_length=dim_fontsize()*5,
-                   horz_line_length=dim_fontsize()*4,
-                   direction=undef, do_circle=false)
+module dim_leaderline(radius=0, text=undef, angle=45, dlength=dim_fontsize()*5,
+                   hlength=dim_fontsize()*4, direction=undef, do_circle=false)
 {
     label = text_or_length(radius*2, text, prefix="⌀");
     text_length = len(label) * dim_fontsize() * 0.6;
     space = dim_fontsize() * 0.6;
-    alen = angle_length < dim_linewidth()*2 ? dim_linewidth()*2 : angle_length;
+    dlen = dlength < dim_linewidth()*2 ? dim_linewidth()*2 : dlength;
 
     dir_left = direction ? direction == "left" :
                             (abs(angle) % 360 > 90) && (abs(angle) % 360 < 270);
 
     // Rotate to angle of arrow
     rotate([0, 0, angle]) {
-        // Draw angled arrow
-        translate([radius, 0]) line(alen, left_arrow=true);
+        // Draw diagonal arrow
+        if (dlength>0)
+            translate([radius, 0]) dim_line(dlen, left_arrow=true);
 
         // Move out to end of arrow and rotate back to horizontal
-        translate([radius + alen, 0]) rotate([0, 0, -angle]) {
+        translate([radius + (dlength > 0 ? dlength : 0), 0]) rotate([0, 0, -angle]) {
 
             // Draw horizontal line
-            translate([dir_left ? -horz_line_length : 0, 0])
-                line(horz_line_length);
+            rotate([0,0,dir_left ? 180 : 0])
+                dim_line(hlength, left_arrow=(dlength <= 0));
 
             // Draw label. Centered text is used to make do_circle test simpler.
-            text_pos = horz_line_length + space + text_length/2;
+            text_pos = hlength + space + text_length/2;
             translate([text_pos * (dir_left ? -1 : 1), 0]) {
                 dim_extrude()
                     text(label, size=dim_fontsize(), font=dim_font(),
@@ -380,7 +383,7 @@ module leader_line(radius, text=undef, angle=45, angle_length=dim_fontsize()*5,
 }
 
 /**
- * titleblock() - Draw a tabular title block
+ * dim_titleblock() - Draw a tabular title block
  * lines: array of lines to draw as table borders
  * descs: array of table cell description labels
  * details: array of table contents text
@@ -403,13 +406,13 @@ module leader_line(radius, text=undef, angle=45, angle_length=dim_fontsize()*5,
  * details    = [[startx, starty, horz/vert, text, size],
  *               [startx, starty, horz/vert, text, size]]
  */
-module titleblock(lines, descs, details)
+module dim_titleblock(lines, descs, details)
 {
     for (line = lines) translate([line[0], line[1]]) {
         if (line[2] == "vert") rotate([0, 0, -90])
-            line(line[3], weight=line[4]);
+            dim_line(line[3], weight=line[4]);
         else if (line[2] == "horz")
-            line(line[3], weight=line[4]);
+            dim_line(line[3], weight=line[4]);
     }
 
     for (line = descs)
@@ -506,7 +509,7 @@ module sample_titleblock1()
         [cols[5]+desc_x, rows[3]+det_y, "horz", "1/100", 1] //Sheet
     ];
 
-    titleblock(lines, descs, details);
+    dim_titleblock(lines, descs, details);
 }
 
 module sample_revisionblock(revisions)
@@ -549,17 +552,17 @@ module sample_revisionblock(revisions)
     num_revisions = len(revisions);
 
     translate([0, row_height * 2]) {
-        titleblock(lines, descs, details);
+        dim_titleblock(lines, descs, details);
 
         //  now for the start of actual revisions
         //  do this piecemeal -- draw the vertical first
         for (col = [0:len(cols)])
             translate([cols[col], 0]) rotate([0, 0, 90])
-                line(num_revisions * row_height);
+                dim_line(num_revisions * row_height);
 
         for (row = [0:len(revisions)]) {
             translate([-lw/2, row * row_height])
-                line(revision_width+lw);
+                dim_line(revision_width+lw);
 
             for (col = [0:2])
                 translate([(cols[col]+desc_x), ((row+1)*row_height+desc_y)])
@@ -672,7 +675,7 @@ module sample_titleblock2()
         [cols[2]+desc_x, rows[1]+det_y, "horz", org_details[2], 1],
     ];
 
-    titleblock(lines, descs, details);
+    dim_titleblock(lines, descs, details);
 
     revisions = [
         ["1a", "2013-4-1", "ds"],
@@ -697,13 +700,13 @@ module sample_lines()
              font=dim_font(), size=dim_fontsize());
 
     translate([-length/2,0])
-        line(length, left_arrow=false, right_arrow=false);
+        dim_line(length, left_arrow=false, right_arrow=false);
     translate([-length/2, 0.25 * DIM_SAMPLE_SCALE])
-        line(length, left_arrow=true, right_arrow=false);
+        dim_line(length, left_arrow=true, right_arrow=false);
     translate([-length/2, 0.5 * DIM_SAMPLE_SCALE])
-        line(length, left_arrow=false, right_arrow=true);
+        dim_line(length, left_arrow=false, right_arrow=true);
     translate([-length/2, 0.75 * DIM_SAMPLE_SCALE])
-        line(length, left_arrow=true, right_arrow=true);
+        dim_line(length, left_arrow=true, right_arrow=true);
 }
 
 /**
@@ -724,16 +727,16 @@ module sample_dimensions(with_text=false)
     // The following two lines are vertical lines that bracket the dimensions
     // left arrow
     translate([-length/2,0]) rotate([0, 0, 90])
-        line(length);
+        dim_line(length);
 
     // right arrow
     translate([length/2,0]) rotate([0, 0, 90])
-        line(length);
+        dim_line(length);
 
     //  The following runs through all the dimension types
     for (i = [0:len(loc)-1])
         translate([-length/2, 0.5 * (len(loc)-i) * DIM_SAMPLE_SCALE])
-            dimensions(length=length, loc=loc[i], mytext=with_text ? loc[i] : undef);
+            dim_dimension(length=length, loc=loc[i], text=with_text ? loc[i] : undef);
 }
 
 /**
@@ -749,15 +752,15 @@ module sample_units(change_mmsize=false)
              halign="center", valign="bottom", font=dim_font(), size=dim_fontsize());
 
     // The following two lines are vertical lines that bracket the dimensions
-    translate([-length/2, 0]) rotate([0, 0, 90]) line(height);
-    translate([length/2, 0]) rotate([0, 0, 90]) line(height);
+    translate([-length/2, 0]) rotate([0, 0, 90]) dim_line(height);
+    translate([length/2, 0]) rotate([0, 0, 90]) dim_line(height);
 
     // The following runs through all the dimension units
     for (i = [0:len(units)-1]) {
         $dim_units = units[i][0];
         $dim_mmsize = change_mmsize ? units[i][1] : 1;
         translate([-length/2, 0.5 * (len(units)-i) * DIM_SAMPLE_SCALE])
-            dimensions(length);
+            dim_dimension(length);
     }
 }
 
@@ -771,21 +774,21 @@ module sample_leaderlines(radius=0.25*DIM_SAMPLE_SCALE)
         text("leader lines", halign="center", valign="bottom",
              font=dim_font(), size=dim_fontsize());
 
-    // Simple call to leader_line() shows circle diameter
-    leader_line(radius);
+    // Simple call to dim_leaderline() shows circle diameter
+    dim_leaderline(radius);
 
     // Angle of line can be specified
     for (angle = [90:30:210])
-        leader_line(radius, str(angle, "° leader line"), angle=angle);
+        dim_leaderline(radius, str(angle, "° leader line"), angle=angle);
 
     // A circle can be placed around the label
     for (i = [0:3]) {
         labels = ["A", "B", "C", "D"];
         angle = -(i*30 + 30);
         text_y = (i+2) * 2 * dim_fontsize();
-        alen = abs(text_y / sin(angle)) - radius;
+        dlen = abs(text_y / sin(angle)) - radius;
 
-        leader_line(radius, labels[i], do_circle=true, angle=angle, angle_length=alen);
+        dim_leaderline(radius, labels[i], do_circle=true, angle=angle, dlength=dlen);
     }
 }
 
@@ -805,8 +808,8 @@ module sample_leaderlines_lr(radius=0.5 * DIM_SAMPLE_SCALE)
 
     dim_outline() circle(radius);
 
-    // Simple call to leader_line() shows circle diameter
-    leader_line(radius);
+    // Simple call to dim_leaderline() shows circle diameter
+    dim_leaderline(radius);
 
     // Leader lines forced to the left
     for (angle = [70:20:210]) {
@@ -814,7 +817,7 @@ module sample_leaderlines_lr(radius=0.5 * DIM_SAMPLE_SCALE)
         alen = abs(text_y / sin(angle)) - radius;
         hlen = DIM_SAMPLE_SCALE*1.5 + (text_y/tan(angle));
 
-        leader_line(radius, angle=angle, angle_length=alen, horz_line_length = hlen,
+        dim_leaderline(radius, angle=angle, dlength=alen, hlength=hlen,
                     direction="left", text=str(angle, "° left"));
     }
 
@@ -826,7 +829,7 @@ module sample_leaderlines_lr(radius=0.5 * DIM_SAMPLE_SCALE)
         alen = abs(text_y / sin(angle)) - radius;
         hlen = DIM_SAMPLE_SCALE*1.5 - (text_y/tan(angle));
 
-        leader_line(radius, angle=angle, angle_length=alen, horz_line_length = hlen,
+        dim_leaderline(radius, angle=angle, dlength=alen, hlength=hlen,
                     direction="right", text=str(angle, "° right"));
     }
 
@@ -837,7 +840,7 @@ module sample_circlecenter()
     radius = .25 * DIM_SAMPLE_SCALE;
 
     translate([0, -DIM_SAMPLE_SCALE/2-dim_fontsize()*2]) dim_extrude()
-        text("circle_center()",
+        text("dim_circlecenter()",
              halign="center", valign="bottom", font=dim_font(), size=dim_fontsize());
 
     dim_outline() difference() {
@@ -845,7 +848,7 @@ module sample_circlecenter()
         circle(r=radius, center=true, $fn=100);
     }
     color("Black")
-        circle_center(radius);
+        dim_circlecenter(radius);
 }
 
 // uncomment these to sample

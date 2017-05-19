@@ -103,7 +103,7 @@ details = [
 color("black") {
     translate([pagesize.x-title_width-dim_pagemargin(),
                dim_pagemargin()+row_height*2])
-        titleblock(lines, descs, details);
+        dim_titleblock(lines, descs, details);
     dim_pageborder();
 }
 
