@@ -52,7 +52,6 @@ union() {
 
 /* Draw the titleblock */
 fs = dim_fontsize();
-lw = dim_linewidth();
 title_width = 50*fs;
 row_height = 3*fs;
 
@@ -68,9 +67,9 @@ desc_size = .65; // relative size of description text
 
 lines = [
     // horizontal lines
-    [cols[0]-lw, rows[0], "horz", title_width+lw*2, 2],
+    [cols[0], rows[0], "horz", title_width, 2],
     [cols[2], rows[1], "horz", title_width - cols[2], 1],
-    [cols[0]-lw, rows[2], "horz", title_width+lw*2, 2],
+    [cols[0], rows[2], "horz", title_width, 2],
 
     // vertical lines
     [0, 0, "vert", row_height * 2, 2],
