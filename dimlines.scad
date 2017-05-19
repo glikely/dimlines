@@ -147,7 +147,7 @@ function dim_extrude_flag() = $dim_extrude ? $dim_extrude : true;
 // configuration for page size and border
 function dim_pagename() = $dim_pagename ? $dim_pagename : "A4";
 function dim_pagesize() = pagesizes[search([dim_pagename()], pagesizes)[0]][1];
-function dim_pagemargin() = $dim_pagemargin ? $dim_pagemargin : 10;
+function dim_pagemargin() = $dim_pagemargin ? $dim_pagemargin : 10+dim_fontsize();
 
 // BUG: The OpenSCAD built in font (at least on the Debian packaged version) is
 // missing some symbols. ex. the diameter '⌀' glyph. Uncomment the following if
@@ -442,7 +442,50 @@ module dim_titleblock(lines, descs, details)
 
 module dim_pageborder(ps=dim_pagesize(), pm=dim_pagemargin())
 {
+    divsize = 50;
+    bg = dim_fontsize();
+    rx_offset = round(((ps.x-bg)/2)/divsize);
+    ry_offset = round(((ps.y-bg)/2)/divsize);
+
+    refchars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+
+    // Page outline
     translate([pm,pm]) dim_outline(weight=2) square([ps.x-pm*2,ps.y-pm*2]);
+    translate([pm-bg,pm-bg]) dim_outline(weight=1) square([ps.x-(pm-bg)*2,ps.y-(pm-bg)*2]);
+
+    // Centering lines
+    translate([ps.x/2, pm-bg]) rotate([0,0,90]) dim_line(bg*2);
+    translate([ps.x/2, ps.y-(pm-bg)]) rotate([0,0,-90]) dim_line(bg*2);
+    translate([pm-bg, ps.y/2]) rotate([0,0,0]) dim_line(bg*2);
+    translate([ps.x-(pm-bg),ps.y/2]) rotate([0,0,180]) dim_line(bg*2);
+
+    // Horizontal reference marks
+    for (i=[divsize:divsize:ps.x/2-pm]) {
+        translate([ps.x/2+i, pm-bg]) rotate([0,0,90]) dim_line(bg);
+        translate([ps.x/2+i, ps.y-(pm-bg)]) rotate([0,0,-90]) dim_line(bg);
+        translate([ps.x/2-i, pm-bg]) rotate([0,0,90]) dim_line(bg);
+        translate([ps.x/2-i, ps.y-(pm-bg)]) rotate([0,0,-90]) dim_line(bg);
+    }
+
+    // Horizontal reference numbers
+    for (i=[0:rx_offset*2-1])
+        for (y=[pm-bg/2, ps.y-(pm-bg/2)])
+            translate([ps.x/2-(rx_offset-0.5-i)*50, y])
+                dim_text(str(i+1), weight=0.5, halign="center", valign="center");
+
+    // Vertical reference marks
+    for (i=[divsize:divsize:ps.y/2-pm]) {
+        translate([pm-bg, ps.y/2+i]) rotate([0,0,0]) dim_line(bg);
+        translate([ps.x-(pm-bg),ps.y/2+i]) rotate([0,0,180]) dim_line(bg);
+        translate([pm-bg, ps.y/2-i]) rotate([0,0,0]) dim_line(bg);
+        translate([ps.x-(pm-bg),ps.y/2-i]) rotate([0,0,180]) dim_line(bg);
+    }
+
+    // Vertical reference letters
+    for (i=[0:ry_offset*2-1])
+        for (x=[pm-bg/2, ps.x-(pm-bg/2)])
+            translate([x, ps.y/2+(ry_offset-0.5-i)*50])
+                dim_text(refchars[i], weight=0.5, halign="center", valign="center");
 }
 
 /* Scale examples to match size of dimension elements */
