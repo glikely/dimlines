@@ -112,6 +112,7 @@ pt = inch/72;
 
 // Table of units. Each tuple is [name, scale, symbol]
 units = [
+    ["none", 1, ""],
     ["mm", 1, " mm"],
     ["cm", 0.1, " cm"],
     ["m", 0.001, " m"],
@@ -132,22 +133,22 @@ pagesizes = [
 ];
 
 // configuration for units of measurement
-function dim_mmsize() = $dim_mmsize ? $dim_mmsize : mm;
-function dim_units() = $dim_units ? $dim_units : "mm";
+function dim_mmsize() = is_undef($dim_mmsize) ? mm : $dim_mmsize;
+function dim_units() = is_undef($dim_units) ? "mm" : $dim_units;
 function dim_unitscale() = units[search([dim_units()], units)[0]][1] / dim_mmsize();
 function dim_unitsymbol() = units[search([dim_units()], units)[0]][2];
-function dim_modelscale() = $dim_modelscale ? $dim_modelscale : 1;
+function dim_modelscale() = is_undef($dim_modelscale) ? 1 : $dim_modelscale;
 
 // configuration for font, font size, line size and whether to extrude into 3D
-function dim_font() = $dim_font ? $dim_font : undef;
-function dim_fontsize() = ($dim_fontsize ? $dim_fontsize : 10*pt*0.8) / dim_modelscale();
-function dim_linewidth() = ($dim_linewidth ? $dim_linewidth : 1 * pt) / dim_modelscale();
-function dim_extrude_flag() = $dim_extrude ? $dim_extrude : true;
+function dim_font() = is_undef($dim_font) ? undef : $dim_font;
+function dim_fontsize() = (is_undef($dim_fontsize) ? 10*pt*0.8 : $dim_fontsize) / dim_modelscale();
+function dim_linewidth() = (is_undef($dim_linewidth) ? 1 * pt : $dim_linewidth) / dim_modelscale();
+function dim_extrude_flag() = is_undef($dim_extrude) ? true : $dim_extrude;
 
 // configuration for page size and border
-function dim_pagename() = $dim_pagename ? $dim_pagename : "A4";
+function dim_pagename() = is_undef($dim_pagename) ? "A4" : $dim_pagename;
 function dim_pagesize() = pagesizes[search([dim_pagename()], pagesizes)[0]][1];
-function dim_pagemargin() = $dim_pagemargin ? $dim_pagemargin : 10+dim_fontsize();
+function dim_pagemargin() = is_undef($dim_pagemargin) ? 10+dim_fontsize() : $dim_pagemargin;
 
 // BUG: The OpenSCAD built in font (at least on the Debian packaged version) is
 // missing some symbols. ex. the diameter '⌀' glyph. Uncomment the following if
@@ -939,4 +940,4 @@ module all_samples()
     }
 }
 
-all_samples();
+//all_samples();
