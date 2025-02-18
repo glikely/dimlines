@@ -112,6 +112,7 @@ pt = inch/72;
 
 // Table of units. Each tuple is [name, scale, symbol]
 units = [
+    ["none", 1, ""],
     ["mm", 1, " mm"],
     ["cm", 0.1, " cm"],
     ["m", 0.001, " m"],
@@ -939,4 +940,4 @@ module all_samples()
     }
 }
 
-all_samples();
+//all_samples();
